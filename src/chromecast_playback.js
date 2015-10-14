@@ -1,5 +1,4 @@
 import {Events, Playback, Utils} from 'Clappr'
-import $ from 'clappr-zepto'
 import chromecastHTML from './public/chromecast.html'
 
 var TICK_INTERVAL = 100
@@ -8,6 +7,7 @@ export default class ChromecastPlayback extends Playback {
 
   get name() { return 'chromecast_playback' }
   get template() { return Utils.template(chromecastHTML) }
+  get attributes() { return { class: 'chromecast-playback' } }
 
   constructor(options) {
     super(options)
@@ -20,7 +20,7 @@ export default class ChromecastPlayback extends Playback {
 
   render() {
     var template = this.template()
-    this.$el = $(template)
+    this.$el.html(template)
     this.$el.find('.chromecast-playback-background').css('background-image', 'url(' + this.options.poster + ')')
   }
 
