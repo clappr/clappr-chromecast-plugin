@@ -1,0 +1,48 @@
+{
+  "name": "clappr-chromecast-plugin",
+  "version": "0.0.1",
+  "description": "Chromecast support for Clappr",
+  "main": "src/index.js",
+  "scripts": {
+    "release": "node_modules/.bin/webpack --progress -d --optimize-minimize --optimize-dedupe --output-filename clappr.min.js",
+    "build": "node_modules/.bin/webpack --progress",
+    "watch": "node_modules/.bin/webpack --progress --watch",
+    "test": "karma start --single-run --browsers Chrome",
+    "start": "node_modules/.bin/webpack-dev-server --content-base public/ --output-public-path / --hot",
+    "lock": "rm -rf npm-shrinkwrap.json node_modules && npm install --silent && npm shrinkwrap"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/clappr/clappr-chromecast-plugin.git"
+  },
+  "keywords": [
+    "clappr",
+    "chromecast"
+  ],
+  "author": "Globo.com",
+  "license": "SEE LICENSE IN LICENSE",
+  "bugs": {
+    "url": "https://github.com/clappr/clappr-chromecast-plugin/issues"
+  },
+  "homepage": "https://github.com/clappr/clappr-chromecast-plugin#readme",
+  "dependencies": {
+    "clappr": "^0.2.13",
+    "clappr-zepto": "0.0.4",
+    "lodash.assign": "^3.2.0"
+  },
+  "devDependencies": {
+    "babel-core": "^5.8.25",
+    "babel-loader": "^5.3.2",
+    "clean-webpack-plugin": "^0.1.3",
+    "compass-mixins": "^0.12.7",
+    "css-loader": "^0.19.0",
+    "file-loader": "^0.8.4",
+    "html-loader": "^0.3.0",
+    "karma": "^0.13.10",
+    "node-sass": "^3.3.3",
+    "sass-loader": "^3.0.0",
+    "url-loader": "^0.5.6",
+    "webpack": "^1.12.2",
+    "webpack-dev-server": "^1.12.0"
+  }
+}
