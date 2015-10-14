@@ -22,9 +22,8 @@ export default class Chromecast extends UICorePlugin {
   }
   constructor(core) {
     super(core)
-    var enableChromecast = !!core.options.chromecastAppId
-    if (Browser.isChrome && enableChromecast) {
-      this.appId = core.options.chromecastAppId
+    if (Browser.isChrome) {      
+      this.appId = core.options.chromecastAppId || DEFAULT_CLAPPR_APP_ID
       this.deviceState = DEVICE_STATE.IDLE
       this.embedScript()
     } else {
