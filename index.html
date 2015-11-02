@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <script type="text/javascript" charset="utf-8" src="/latest/clappr.min.js"></script>
+  <script type="text/javascript" charset="utf-8" src="/latest/clappr-chromecast-plugin.js"></script>
+  <title>clappr-level-selector-plugin Test Page</title>
+  <script type="text/javascript" charset="utf-8">
+Clappr.Log.setLevel(0)
+window.onload = function() {
+  var player = new Clappr.Player({
+    source: 'http://cdn.clappr.io/highline.mp4',
+    poster: 'http://clappr.io/poster.png',
+    parentId: '#player-wrapper',
+
+    plugins: {
+      core: [Chromecast]
+    },
+
+    width: 640, height: 360,
+    hideMediaControl: false,
+    autoPlay: true
+  });
+}
+  </script>
+</head>
+<body>
+  <div align="center">
+    <div id="player-wrapper">
+  </div>
+  </div>
+</body>
+</html>
