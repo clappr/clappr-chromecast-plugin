@@ -2,6 +2,11 @@ import {Browser, Events, Log, Styler, UICorePlugin} from 'Clappr'
 import ChromecastPlayback from './chromecast_playback'
 import chromecastStyle from './public/style.scss'
 import assign from 'lodash.assign'
+import castIconSvg from './public/ic_cast_24dp.svg'
+import connecting1IconSvg from './public/ic_cast0_24dp.svg'
+import connecting2IconSvg from './public/ic_cast1_24dp.svg'
+import connecting3IconSvg from './public/ic_cast2_24dp.svg'
+import connectedIconSvg from './public/ic_cast_connected_24dp.svg'
 
 var DEVICE_STATE = {
   'IDLE' : 0,
@@ -17,12 +22,12 @@ export default class Chromecast extends UICorePlugin {
   get tagName() { return 'button' }
   get attributes() {
     return {
-      'class' : 'chromecast-button chromecast-icon icon-cast'
+      'class' : 'chromecast-button'
     }
   }
   constructor(core) {
     super(core)
-    if (Browser.isChrome) {      
+    if (Browser.isChrome) {
       this.appId = core.options.chromecastAppId || DEFAULT_CLAPPR_APP_ID
       this.deviceState = DEVICE_STATE.IDLE
       this.embedScript()
@@ -110,10 +115,9 @@ export default class Chromecast extends UICorePlugin {
   }
 
   launchSuccess(session) {
-    this.$el.removeClass('icon-cast-connecting')
+    this.renderConnected()
     clearInterval(this.connectAnimInterval)
     this.connectAnimInterval = null
-    this.$el.removeClass('loading-1 loading-2 loading-3')
     this.core.mediaControl.resetKeepVisible()
     Log.debug(this.name, 'launch success - session: ' + session.sessionId)
     this.newSession(session)
@@ -121,10 +125,9 @@ export default class Chromecast extends UICorePlugin {
 
   launchError(e) {
     Log.debug(this.name, 'error on launch', e)
-    this.$el.removeClass('icon-cast-connecting')
+    this.renderDisconnected()
     clearInterval(this.connectAnimInterval)
     this.connectAnimInterval = null
-    this.$el.removeClass('loading-1 loading-2 loading-3')
     this.core.mediaControl.resetKeepVisible()
   }
 
@@ -162,8 +165,7 @@ export default class Chromecast extends UICorePlugin {
   newSession(session) {
     this.session = session
     this.deviceState = DEVICE_STATE.ACTIVE
-    this.$el.removeClass('icon-cast')
-    this.$el.addClass('icon-cast-connected')
+    this.renderConnected()
 
     session.addUpdateListener(() => this.sessionUpdateListener())
 
@@ -171,8 +173,7 @@ export default class Chromecast extends UICorePlugin {
   }
 
   sessionStopped() {
-    this.$el.addClass('icon-cast')
-    this.$el.removeClass('icon-cast-connected')
+    this.renderDisconnected()
 
     var time = this.currentTime
 
@@ -220,10 +221,9 @@ export default class Chromecast extends UICorePlugin {
     chrome.cast.requestSession((session) => this.launchSuccess(session), (e) => this.launchError(e))
     if (!this.session) {
       var position = 0
-      this.$el.addClass('icon-cast-connecting')
+      var connectingIcons = [connecting1IconSvg, connecting2IconSvg, connecting3IconSvg]
       this.connectAnimInterval = setInterval(() => {
-        this.$el.removeClass('loading-1 loading-2 loading-3')
-        this.$el.addClass(`loading-${position+1}`)
+        this.$el.html(connectingIcons[position])
         position = (position + 1) % 3
       }, 600)
       this.core.mediaControl.setKeepVisible()
@@ -257,7 +257,16 @@ export default class Chromecast extends UICorePlugin {
     }
   }
 
+  renderConnected() {
+    this.$el.html(connectedIconSvg)
+  }
+
+  renderDisconnected() {
+    this.$el.html(castIconSvg)
+  }
+
   render() {
+    this.renderDisconnected()
     this.$el.click(() => this.click())
     this.core.mediaControl.$el.find('.media-control-right-panel[data-media-control]').append(this.$el)
     this.hide()
