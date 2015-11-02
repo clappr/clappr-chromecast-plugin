@@ -1,4 +1,4 @@
-import {Events, Playback, Utils} from 'Clappr'
+import {Events, Playback, template} from 'Clappr'
 import chromecastHTML from './public/chromecast.html'
 
 var TICK_INTERVAL = 100
@@ -6,7 +6,7 @@ var TICK_INTERVAL = 100
 export default class ChromecastPlayback extends Playback {
 
   get name() { return 'chromecast_playback' }
-  get template() { return Utils.template(chromecastHTML) }
+  get template() { return template(chromecastHTML) }
   get attributes() { return { class: 'chromecast-playback' } }
 
   constructor(options) {
