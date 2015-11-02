@@ -40,10 +40,10 @@ module.exports = {
            test: /\.(png|woff|eot|ttf|swf)/, loader: 'url-loader?limit=1'
        },
        {
-           test: /\.svg/, loader: 'file-loader'
+           test: /\.svg/, loader: 'svg-inline'
        },
        {
-           test: /\.html/, loader: 'html?minimize=false'
+           test: /\.html/, loader: 'html?minimize=true'
        }
     ],
   },
