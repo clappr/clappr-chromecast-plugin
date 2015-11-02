@@ -21,7 +21,11 @@ export default class ChromecastPlayback extends Playback {
   render() {
     var template = this.template()
     this.$el.html(template)
-    this.$el.find('.chromecast-playback-background').css('background-image', 'url(' + this.options.poster + ')')
+    if (this.options.poster) {
+      this.$el.find('.chromecast-playback-background').css('background-image', 'url(' + this.options.poster + ')')
+    } else {
+      this.$el.find('.chromecast-playback-background').css('background-color', '#666')
+    }
   }
 
   play() {
