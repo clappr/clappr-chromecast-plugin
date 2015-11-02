@@ -170,6 +170,9 @@ export default class Chromecast extends UICorePlugin {
     session.addUpdateListener(() => this.sessionUpdateListener())
 
     this.originalPlaybackPlaying = this.core.mediaControl.container.isPlaying()
+    if (this.originalPlaybackPlaying) {
+      this.containerPlay()
+    }
   }
 
   sessionStopped() {
