@@ -244,12 +244,8 @@ export default class Chromecast extends UICorePlugin {
     this.currentTime = 0
   }
 
-  containerTimeUpdate(position, duration) {
-    this.currentTime = position
-  }
-
-  playbackTimeUpdate(position, duration) {
-    this.currentTime = position
+  containerTimeUpdate(timeProgress) {
+    this.currentTime = timeProgress.current
   }
 
   containerPlay() {
