@@ -90,7 +90,7 @@ export default class ChromecastPlayback extends Playback {
   updateMediaControl() {
     var position = this.currentMedia.getEstimatedTime()
     var duration = this.currentMedia.media.duration
-    this.trigger(Events.PLAYBACK_TIMEUPDATE, position, duration, this.name)
+    this.trigger(Events.PLAYBACK_TIMEUPDATE, {current: position, total: duration}, this.name)
   }
 
   show() {
