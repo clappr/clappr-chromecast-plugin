@@ -162,9 +162,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this.container = this.container || this.core.mediaControl.container;
 	      this.listenTo(this.core.mediaControl, _Clappr.Events.MEDIACONTROL_RENDERED, this.settingsUpdate);
 	      this.listenTo(this.core.mediaControl, _Clappr.Events.MEDIACONTROL_CONTAINERCHANGED, this.containerChanged);
-	      this.listenTo(this.container, _Clappr.Events.CONTAINER_TIMEUPDATE, this.containerTimeUpdate);
-	      this.listenTo(this.container, _Clappr.Events.CONTAINER_PLAY, this.containerPlay);
-	      this.listenTo(this.container, _Clappr.Events.CONTAINER_ENDED, this.sessionStopped);
+	      if (this.container) {
+	        this.listenTo(this.container, _Clappr.Events.CONTAINER_TIMEUPDATE, this.containerTimeUpdate);
+	        this.listenTo(this.container, _Clappr.Events.CONTAINER_PLAY, this.containerPlay);
+	        this.listenTo(this.container, _Clappr.Events.CONTAINER_ENDED, this.sessionStopped);
+	      }
 	    }
 	  }, {
 	    key: 'enable',
