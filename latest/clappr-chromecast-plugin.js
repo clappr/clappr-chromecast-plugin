@@ -419,13 +419,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    }
 	  }, {
 	    key: 'containerTimeUpdate',
-	    value: function containerTimeUpdate(position, duration) {
-	      this.currentTime = position;
-	    }
-	  }, {
-	    key: 'playbackTimeUpdate',
-	    value: function playbackTimeUpdate(position, duration) {
-	      this.currentTime = position;
+	    value: function containerTimeUpdate(timeProgress) {
+	      this.currentTime = timeProgress.current;
 	    }
 	  }, {
 	    key: 'containerPlay',
@@ -630,7 +625,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function updateMediaControl() {
 	      var position = this.currentMedia.getEstimatedTime();
 	      var duration = this.currentMedia.media.duration;
-	      this.trigger(_Clappr.Events.PLAYBACK_TIMEUPDATE, position, duration, this.name);
+	      this.trigger(_Clappr.Events.PLAYBACK_TIMEUPDATE, { current: position, total: duration }, this.name);
 	    }
 	  }, {
 	    key: 'show',
@@ -679,17 +674,15 @@ return /******/ (function(modules) { // webpackBootstrap
 		Author Tobias Koppers @sokra
 	*/
 	// css base code, injected by the css-loader
-	"use strict";
-
-	module.exports = function () {
+	module.exports = function() {
 		var list = [];
 
 		// return the list of modules as css string
 		list.toString = function toString() {
 			var result = [];
-			for (var i = 0; i < this.length; i++) {
+			for(var i = 0; i < this.length; i++) {
 				var item = this[i];
-				if (item[2]) {
+				if(item[2]) {
 					result.push("@media " + item[2] + "{" + item[1] + "}");
 				} else {
 					result.push(item[1]);
@@ -699,23 +692,25 @@ return /******/ (function(modules) { // webpackBootstrap
 		};
 
 		// import a list of modules into the list
-		list.i = function (modules, mediaQuery) {
-			if (typeof modules === "string") modules = [[null, modules, ""]];
+		list.i = function(modules, mediaQuery) {
+			if(typeof modules === "string")
+				modules = [[null, modules, ""]];
 			var alreadyImportedModules = {};
-			for (var i = 0; i < this.length; i++) {
+			for(var i = 0; i < this.length; i++) {
 				var id = this[i][0];
-				if (typeof id === "number") alreadyImportedModules[id] = true;
+				if(typeof id === "number")
+					alreadyImportedModules[id] = true;
 			}
-			for (i = 0; i < modules.length; i++) {
+			for(i = 0; i < modules.length; i++) {
 				var item = modules[i];
 				// skip already imported module
 				// this implementation is not 100% perfect for weird media query combinations
 				//  when a module is imported multiple times with different media queries.
 				//  I hope this will never occur (Hey this way we have smaller bundles)
-				if (typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
-					if (mediaQuery && !item[2]) {
+				if(typeof item[0] !== "number" || !alreadyImportedModules[item[0]]) {
+					if(mediaQuery && !item[2]) {
 						item[2] = mediaQuery;
-					} else if (mediaQuery) {
+					} else if(mediaQuery) {
 						item[2] = "(" + item[2] + ") and (" + mediaQuery + ")";
 					}
 					list.push(item);
@@ -724,6 +719,7 @@ return /******/ (function(modules) { // webpackBootstrap
 		};
 		return list;
 	};
+
 
 /***/ },
 /* 7 */
@@ -737,8 +733,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
 	 * Available under MIT license <https://lodash.com/license>
 	 */
-	'use strict';
-
 	var baseAssign = __webpack_require__(8),
 	    createAssigner = __webpack_require__(14),
 	    keys = __webpack_require__(10);
@@ -755,20 +749,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @returns {Object} Returns `object`.
 	 */
 	function assignWith(object, source, customizer) {
-	    var index = -1,
-	        props = keys(source),
-	        length = props.length;
+	  var index = -1,
+	      props = keys(source),
+	      length = props.length;
 
-	    while (++index < length) {
-	        var key = props[index],
-	            value = object[key],
-	            result = customizer(value, source[key], key, object, source);
+	  while (++index < length) {
+	    var key = props[index],
+	        value = object[key],
+	        result = customizer(value, source[key], key, object, source);
 
-	        if ((result === result ? result !== value : value === value) || value === undefined && !(key in object)) {
-	            object[key] = result;
-	        }
+	    if ((result === result ? (result !== value) : (value === value)) ||
+	        (value === undefined && !(key in object))) {
+	      object[key] = result;
 	    }
-	    return object;
+	  }
+	  return object;
 	}
 
 	/**
@@ -803,11 +798,14 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * defaults({ 'user': 'barney' }, { 'age': 36 }, { 'user': 'fred' });
 	 * // => { 'user': 'barney', 'age': 36 }
 	 */
-	var assign = createAssigner(function (object, source, customizer) {
-	    return customizer ? assignWith(object, source, customizer) : baseAssign(object, source);
+	var assign = createAssigner(function(object, source, customizer) {
+	  return customizer
+	    ? assignWith(object, source, customizer)
+	    : baseAssign(object, source);
 	});
 
 	module.exports = assign;
+
 
 /***/ },
 /* 8 */
@@ -821,8 +819,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
 	 * Available under MIT license <https://lodash.com/license>
 	 */
-	'use strict';
-
 	var baseCopy = __webpack_require__(9),
 	    keys = __webpack_require__(10);
 
@@ -836,10 +832,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @returns {Object} Returns `object`.
 	 */
 	function baseAssign(object, source) {
-	  return source == null ? object : baseCopy(source, keys(source), object);
+	  return source == null
+	    ? object
+	    : baseCopy(source, keys(source), object);
 	}
 
 	module.exports = baseAssign;
+
 
 /***/ },
 /* 9 */
@@ -863,8 +862,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {Object} [object={}] The object to copy properties to.
 	 * @returns {Object} Returns `object`.
 	 */
-	"use strict";
-
 	function baseCopy(source, props, object) {
 	  object || (object = {});
 
@@ -880,6 +877,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = baseCopy;
 
+
 /***/ },
 /* 10 */
 /***/ function(module, exports, __webpack_require__) {
@@ -892,8 +890,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
 	 * Available under MIT license <https://lodash.com/license>
 	 */
-	'use strict';
-
 	var getNative = __webpack_require__(11),
 	    isArguments = __webpack_require__(12),
 	    isArray = __webpack_require__(13);
@@ -924,7 +920,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @returns {Function} Returns the new function.
 	 */
 	function baseProperty(key) {
-	  return function (object) {
+	  return function(object) {
 	    return object == null ? undefined : object[key];
 	  };
 	}
@@ -961,7 +957,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @returns {boolean} Returns `true` if `value` is a valid index, else `false`.
 	 */
 	function isIndex(value, length) {
-	  value = typeof value == 'number' || reIsUint.test(value) ? +value : -1;
+	  value = (typeof value == 'number' || reIsUint.test(value)) ? +value : -1;
 	  length = length == null ? MAX_SAFE_INTEGER : length;
 	  return value > -1 && value % 1 == 0 && value < length;
 	}
@@ -992,14 +988,15 @@ return /******/ (function(modules) { // webpackBootstrap
 	      propsLength = props.length,
 	      length = propsLength && object.length;
 
-	  var allowIndexes = !!length && isLength(length) && (isArray(object) || isArguments(object));
+	  var allowIndexes = !!length && isLength(length) &&
+	    (isArray(object) || isArguments(object));
 
 	  var index = -1,
 	      result = [];
 
 	  while (++index < propsLength) {
 	    var key = props[index];
-	    if (allowIndexes && isIndex(key, length) || hasOwnProperty.call(object, key)) {
+	    if ((allowIndexes && isIndex(key, length)) || hasOwnProperty.call(object, key)) {
 	      result.push(key);
 	    }
 	  }
@@ -1060,9 +1057,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * _.keys('hi');
 	 * // => ['0', '1']
 	 */
-	var keys = !nativeKeys ? shimKeys : function (object) {
+	var keys = !nativeKeys ? shimKeys : function(object) {
 	  var Ctor = object == null ? undefined : object.constructor;
-	  if (typeof Ctor == 'function' && Ctor.prototype === object || typeof object != 'function' && isArrayLike(object)) {
+	  if ((typeof Ctor == 'function' && Ctor.prototype === object) ||
+	      (typeof object != 'function' && isArrayLike(object))) {
 	    return shimKeys(object);
 	  }
 	  return isObject(object) ? nativeKeys(object) : [];
@@ -1098,7 +1096,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    object = Object(object);
 	  }
 	  var length = object.length;
-	  length = length && isLength(length) && (isArray(object) || isArguments(object)) && length || 0;
+	  length = (length && isLength(length) &&
+	    (isArray(object) || isArguments(object)) && length) || 0;
 
 	  var Ctor = object.constructor,
 	      index = -1,
@@ -1107,10 +1106,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	      skipIndexes = length > 0;
 
 	  while (++index < length) {
-	    result[index] = index + '';
+	    result[index] = (index + '');
 	  }
 	  for (var key in object) {
-	    if (!(skipIndexes && isIndex(key, length)) && !(key == 'constructor' && (isProto || !hasOwnProperty.call(object, key)))) {
+	    if (!(skipIndexes && isIndex(key, length)) &&
+	        !(key == 'constructor' && (isProto || !hasOwnProperty.call(object, key)))) {
 	      result.push(key);
 	    }
 	  }
@@ -1118,6 +1118,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	module.exports = keys;
+
 
 /***/ },
 /* 11 */
@@ -1133,8 +1134,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	/** `Object#toString` result references. */
-	'use strict';
-
 	var funcTag = '[object Function]';
 
 	/** Used to detect host constructors (Safari > 5). */
@@ -1167,7 +1166,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	var objToString = objectProto.toString;
 
 	/** Used to detect if a method is native. */
-	var reIsNative = RegExp('^' + fnToString.call(hasOwnProperty).replace(/[\\^$.*+?()[\]{}|]/g, '\\$&').replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$');
+	var reIsNative = RegExp('^' +
+	  fnToString.call(hasOwnProperty).replace(/[\\^$.*+?()[\]{}|]/g, '\\$&')
+	  .replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$'
+	);
 
 	/**
 	 * Gets the native function at `key` of `object`.
@@ -1260,6 +1262,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = getNative;
 
+
 /***/ },
 /* 12 */
 /***/ function(module, exports) {
@@ -1280,8 +1283,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {*} value The value to check.
 	 * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
 	 */
-	'use strict';
-
 	function isObjectLike(value) {
 	  return !!value && typeof value == 'object';
 	}
@@ -1309,7 +1310,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @returns {Function} Returns the new function.
 	 */
 	function baseProperty(key) {
-	  return function (object) {
+	  return function(object) {
 	    return object == null ? undefined : object[key];
 	  };
 	}
@@ -1367,10 +1368,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * // => false
 	 */
 	function isArguments(value) {
-	  return isObjectLike(value) && isArrayLike(value) && hasOwnProperty.call(value, 'callee') && !propertyIsEnumerable.call(value, 'callee');
+	  return isObjectLike(value) && isArrayLike(value) &&
+	    hasOwnProperty.call(value, 'callee') && !propertyIsEnumerable.call(value, 'callee');
 	}
 
 	module.exports = isArguments;
+
 
 /***/ },
 /* 13 */
@@ -1386,8 +1389,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	/** `Object#toString` result references. */
-	'use strict';
-
 	var arrayTag = '[object Array]',
 	    funcTag = '[object Function]';
 
@@ -1421,7 +1422,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	var objToString = objectProto.toString;
 
 	/** Used to detect if a method is native. */
-	var reIsNative = RegExp('^' + fnToString.call(hasOwnProperty).replace(/[\\^$.*+?()[\]{}|]/g, '\\$&').replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$');
+	var reIsNative = RegExp('^' +
+	  fnToString.call(hasOwnProperty).replace(/[\\^$.*+?()[\]{}|]/g, '\\$&')
+	  .replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, '$1.*?') + '$'
+	);
 
 	/* Native method references for those with the same name as other `lodash` methods. */
 	var nativeIsArray = getNative(Array, 'isArray');
@@ -1474,7 +1478,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * _.isArray(function() { return arguments; }());
 	 * // => false
 	 */
-	var isArray = nativeIsArray || function (value) {
+	var isArray = nativeIsArray || function(value) {
 	  return isObjectLike(value) && isLength(value.length) && objToString.call(value) == arrayTag;
 	};
 
@@ -1556,6 +1560,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = isArray;
 
+
 /***/ },
 /* 14 */
 /***/ function(module, exports, __webpack_require__) {
@@ -1568,8 +1573,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
 	 * Available under MIT license <https://lodash.com/license>
 	 */
-	'use strict';
-
 	var bindCallback = __webpack_require__(15),
 	    isIterateeCall = __webpack_require__(16),
 	    restParam = __webpack_require__(17);
@@ -1585,7 +1588,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @returns {Function} Returns the new assigner function.
 	 */
 	function createAssigner(assigner) {
-	  return restParam(function (object, sources) {
+	  return restParam(function(object, sources) {
 	    var index = -1,
 	        length = object == null ? 0 : sources.length,
 	        customizer = length > 2 ? sources[length - 2] : undefined,
@@ -1597,7 +1600,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      length -= 2;
 	    } else {
 	      customizer = typeof thisArg == 'function' ? thisArg : undefined;
-	      length -= customizer ? 1 : 0;
+	      length -= (customizer ? 1 : 0);
 	    }
 	    if (guard && isIterateeCall(sources[0], sources[1], guard)) {
 	      customizer = length < 3 ? undefined : customizer;
@@ -1614,6 +1617,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	module.exports = createAssigner;
+
 
 /***/ },
 /* 15 */
@@ -1638,8 +1642,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @param {number} [argCount] The number of arguments to provide to `func`.
 	 * @returns {Function} Returns the callback.
 	 */
-	'use strict';
-
 	function bindCallback(func, thisArg, argCount) {
 	  if (typeof func != 'function') {
 	    return identity;
@@ -1648,24 +1650,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return func;
 	  }
 	  switch (argCount) {
-	    case 1:
-	      return function (value) {
-	        return func.call(thisArg, value);
-	      };
-	    case 3:
-	      return function (value, index, collection) {
-	        return func.call(thisArg, value, index, collection);
-	      };
-	    case 4:
-	      return function (accumulator, value, index, collection) {
-	        return func.call(thisArg, accumulator, value, index, collection);
-	      };
-	    case 5:
-	      return function (value, other, key, object, source) {
-	        return func.call(thisArg, value, other, key, object, source);
-	      };
+	    case 1: return function(value) {
+	      return func.call(thisArg, value);
+	    };
+	    case 3: return function(value, index, collection) {
+	      return func.call(thisArg, value, index, collection);
+	    };
+	    case 4: return function(accumulator, value, index, collection) {
+	      return func.call(thisArg, accumulator, value, index, collection);
+	    };
+	    case 5: return function(value, other, key, object, source) {
+	      return func.call(thisArg, value, other, key, object, source);
+	    };
 	  }
-	  return function () {
+	  return function() {
 	    return func.apply(thisArg, arguments);
 	  };
 	}
@@ -1691,6 +1689,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = bindCallback;
 
+
 /***/ },
 /* 16 */
 /***/ function(module, exports) {
@@ -1705,8 +1704,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	/** Used to detect unsigned integer values. */
-	'use strict';
-
 	var reIsUint = /^\d+$/;
 
 	/**
@@ -1723,7 +1720,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @returns {Function} Returns the new function.
 	 */
 	function baseProperty(key) {
-	  return function (object) {
+	  return function(object) {
 	    return object == null ? undefined : object[key];
 	  };
 	}
@@ -1760,7 +1757,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * @returns {boolean} Returns `true` if `value` is a valid index, else `false`.
 	 */
 	function isIndex(value, length) {
-	  value = typeof value == 'number' || reIsUint.test(value) ? +value : -1;
+	  value = (typeof value == 'number' || reIsUint.test(value)) ? +value : -1;
 	  length = length == null ? MAX_SAFE_INTEGER : length;
 	  return value > -1 && value % 1 == 0 && value < length;
 	}
@@ -1779,9 +1776,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    return false;
 	  }
 	  var type = typeof index;
-	  if (type == 'number' ? isArrayLike(object) && isIndex(index, object.length) : type == 'string' && index in object) {
+	  if (type == 'number'
+	      ? (isArrayLike(object) && isIndex(index, object.length))
+	      : (type == 'string' && index in object)) {
 	    var other = object[index];
-	    return value === value ? value === other : other !== other;
+	    return value === value ? (value === other) : (other !== other);
 	  }
 	  return false;
 	}
@@ -1828,6 +1827,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	module.exports = isIterateeCall;
 
+
 /***/ },
 /* 17 */
 /***/ function(module, exports) {
@@ -1842,8 +1842,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	 */
 
 	/** Used as the `TypeError` message for "Functions" methods. */
-	'use strict';
-
 	var FUNC_ERROR_TEXT = 'Expected a function';
 
 	/* Native method references for those with the same name as other `lodash` methods. */
@@ -1875,8 +1873,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  if (typeof func != 'function') {
 	    throw new TypeError(FUNC_ERROR_TEXT);
 	  }
-	  start = nativeMax(start === undefined ? func.length - 1 : +start || 0, 0);
-	  return function () {
+	  start = nativeMax(start === undefined ? (func.length - 1) : (+start || 0), 0);
+	  return function() {
 	    var args = arguments,
 	        index = -1,
 	        length = nativeMax(args.length - start, 0),
@@ -1886,12 +1884,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      rest[index] = args[start + index];
 	    }
 	    switch (start) {
-	      case 0:
-	        return func.call(this, rest);
-	      case 1:
-	        return func.call(this, args[0], rest);
-	      case 2:
-	        return func.call(this, args[0], args[1], rest);
+	      case 0: return func.call(this, rest);
+	      case 1: return func.call(this, args[0], rest);
+	      case 2: return func.call(this, args[0], args[1], rest);
 	    }
 	    var otherArgs = Array(start + 1);
 	    index = -1;
@@ -1904,6 +1899,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	}
 
 	module.exports = restParam;
+
 
 /***/ },
 /* 18 */
