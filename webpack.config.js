@@ -17,13 +17,14 @@ if (process.env.npm_lifecycle_event === 'release') {
 }
 
 module.exports = {
-  entry: path.resolve(__dirname, 'src/index.js'),
+  entry: path.resolve(__dirname, 'src/chromecast.js'),
   plugins: plugins,
   module: {
     loaders: [
       {
         test: /\.js$/,
         loader: 'babel',
+        exclude: /node_modules/
       },
       {
         test: /\.scss$/,
@@ -56,9 +57,9 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
-    publicPath: '<%=baseUrl%>/',
+    publicPath: '/',
     filename: 'clappr-chromecast-plugin.js',
-    library: 'Chromecast',
+    library: 'ChromecastPlugin',
     libraryTarget: 'umd',
   },
 };

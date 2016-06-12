@@ -2,7 +2,7 @@
   "name": "clappr-chromecast-plugin",
   "version": "0.0.1",
   "description": "Chromecast support for Clappr",
-  "main": "src/index.js",
+  "main": "dist/clappr-chromecast-plugin.js",
   "scripts": {
     "release": "node_modules/.bin/webpack --progress -d --optimize-minimize --optimize-dedupe --output-filename clappr-chromecast-plugin.min.js",
     "build": "node_modules/.bin/webpack --progress",
