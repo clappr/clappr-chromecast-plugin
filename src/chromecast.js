@@ -8,16 +8,28 @@ import connecting2IconSvg from './public/ic_cast1_24dp.svg'
 import connecting3IconSvg from './public/ic_cast2_24dp.svg'
 import connectedIconSvg from './public/ic_cast_connected_24dp.svg'
 
-var DEVICE_STATE = {
+const DEVICE_STATE = {
   'IDLE' : 0,
   'ACTIVE' : 1,
   'WARNING' : 2,
   'ERROR' : 3,
 };
 
-var DEFAULT_CLAPPR_APP_ID = '9DFB77C0'
+const DEFAULT_CLAPPR_APP_ID = '9DFB77C0'
 
-export default class Chromecast extends UICorePlugin {
+const MIMETYPES = {
+  'mp4': 'video/mp4',
+  'ogg': 'video/ogg',
+  '3gpp': 'video/3gpp',
+  'webm': 'video/webm',
+  'mkv': 'video/x-matroska',
+  'm3u8': 'application/x-mpegurl',
+  'mpd': 'application/dash+xml'
+}
+MIMETYPES['ogv'] = MIMETYPES['ogg']
+MIMETYPES['3gp'] = MIMETYPES['3gpp']
+
+export default class ChromecastPlugin extends UICorePlugin {
   get name() { return 'chromecast' }
   get tagName() { return 'button' }
   get attributes() {
@@ -37,12 +49,14 @@ export default class Chromecast extends UICorePlugin {
   }
 
   bindEvents() {
-    this.container = this.container || this.core.mediaControl.container
+    this.container = this.container || this.core.getCurrentContainer()
     this.listenTo(this.core.mediaControl, Events.MEDIACONTROL_RENDERED, this.settingsUpdate)
     this.listenTo(this.core.mediaControl, Events.MEDIACONTROL_CONTAINERCHANGED, this.containerChanged)
-    this.listenTo(this.container, Events.CONTAINER_TIMEUPDATE, this.containerTimeUpdate)
-    this.listenTo(this.container, Events.CONTAINER_PLAY, this.containerPlay)
-    this.listenTo(this.container, Events.CONTAINER_ENDED, this.sessionStopped)
+    if (this.container) {
+      this.listenTo(this.container, Events.CONTAINER_TIMEUPDATE, this.containerTimeUpdate)
+      this.listenTo(this.container, Events.CONTAINER_PLAY, this.containerPlay)
+      this.listenTo(this.container, Events.CONTAINER_ENDED, this.sessionStopped)
+    }
   }
 
   enable() {
@@ -129,12 +143,13 @@ export default class Chromecast extends UICorePlugin {
     clearInterval(this.connectAnimInterval)
     this.connectAnimInterval = null
     this.core.mediaControl.resetKeepVisible()
+    this.container.play()
   }
 
   loadMediaSuccess(how, mediaSession) {
     Log.debug(this.name, 'new media session', mediaSession, '(', how , ')');
 
-    this.originalPlayback = this.core.mediaControl.container.playback
+    this.originalPlayback = this.core.getCurrentPlayback()
 
     var options = assign({}, this.originalPlayback.options, {currentMedia: mediaSession, mediaControl: this.core.mediaControl})
     this.src = this.originalPlayback.src
@@ -145,17 +160,13 @@ export default class Chromecast extends UICorePlugin {
     this.mediaSession = mediaSession
 
     this.originalPlayback.$el.remove()
-    this.core.mediaControl.container.$el.append(this.playbackProxy.$el)
 
-    var container = this.core.mediaControl.container
+    var container = this.core.getCurrentContainer()
+    container.$el.append(this.playbackProxy.$el)
     container.stopListening()
     container.playback = this.playbackProxy
     container.bindEvents()
     container.settingsUpdate()
-
-    if (!this.originalPlaybackPlaying) {
-      setTimeout(() => container.pause(), 100)
-    }
   }
 
   loadMediaError(e) {
@@ -169,10 +180,7 @@ export default class Chromecast extends UICorePlugin {
 
     session.addUpdateListener(() => this.sessionUpdateListener())
 
-    this.originalPlaybackPlaying = this.core.mediaControl.container.isPlaying()
-    if (this.originalPlaybackPlaying) {
-      this.containerPlay()
-    }
+    this.containerPlay()
   }
 
   sessionStopped() {
@@ -186,26 +194,28 @@ export default class Chromecast extends UICorePlugin {
       this.mediaSession = null
     }
 
-    this.core.load(this.src)
+    this.core.load(this.src || this.core.options.sources)
 
-    var container = this.core.mediaControl.container
+    var container = this.core.getCurrentContainer()
 
-    if (this.playbackProxy.isPlaying() || playerState === 'PAUSED') {
-      container.once(Events.CONTAINER_READY, () => {
-        container.play()
-        container.playback.seek(100 * time / container.getDuration())
-      })
+    if (this.playbackProxy) {
+      if (this.playbackProxy.isPlaying() || playerState === 'PAUSED') {
+        container.once(Events.CONTAINER_READY, () => {
+          container.play()
+          container.playback.seek(100 * time / container.getDuration())
+        })
+      }
+      this.playbackProxy.stop()
     }
-
-    this.playbackProxy.stop()
   }
 
   loadMedia() {
     this.container.pause()
-    var src = this.core.mediaControl.container.playback.src
+    var src = this.container.options.src
+    var mimeType = ChromecastPlugin.mimeTypeFor(src)
     Log.debug(this.name, "loading... " + src)
     var mediaInfo = new chrome.cast.media.MediaInfo(src)
-    mediaInfo.contentType = 'video/mp4'
+    mediaInfo.contentType = mimeType
     var request = new chrome.cast.media.LoadRequest(mediaInfo)
     request.autoplay = true
     request.currentTime = this.currentTime || 0
@@ -221,6 +231,7 @@ export default class Chromecast extends UICorePlugin {
   }
 
   click() {
+    this.container.pause()
     chrome.cast.requestSession((session) => this.launchSuccess(session), (e) => this.launchError(e))
     if (!this.session) {
       var position = 0
@@ -238,7 +249,7 @@ export default class Chromecast extends UICorePlugin {
   }
 
   containerChanged() {
-    this.container = this.core.mediaControl.container
+    this.container = this.core.getCurrentContainer()
     this.stopListening()
     this.bindEvents()
     this.currentTime = 0
@@ -249,7 +260,7 @@ export default class Chromecast extends UICorePlugin {
   }
 
   containerPlay() {
-    if (!!this.session && (!this.mediaSession || this.mediaSession.playerStatus === 'IDLE')) {
+    if (this.session && (!this.mediaSession || this.mediaSession.playerStatus === 'IDLE')) {
       Log.debug(this.name, 'load media')
       this.currentTime = this.currentTime || 0
       this.loadMedia()
@@ -272,5 +283,14 @@ export default class Chromecast extends UICorePlugin {
     var style = Styler.getStyleFor(chromecastStyle, {baseUrl: this.core.options.baseUrl})
     this.core.$el.append(style)
     return this
+  }
+
+  static mimeTypeFor(srcUrl) {
+    var extension = (srcUrl.split('?')[0].match(/.*\.(.*)$/) || [])[1]
+    if (MIMETYPES[extension]) {
+      return MIMETYPES[extension]
+    } else if (srcUrl.indexOf('.ism') > -1) {
+      return 'application/vnd.ms-sstr+xml'
+    }
   }
 }

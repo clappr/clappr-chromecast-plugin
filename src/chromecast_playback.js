@@ -1,4 +1,4 @@
-import {Events, Playback, template} from 'Clappr'
+import {Events, Log, Playback, template} from 'Clappr'
 import chromecastHTML from './public/chromecast.html'
 
 var TICK_INTERVAL = 100
@@ -45,9 +45,9 @@ export default class ChromecastPlayback extends Playback {
   seek(time) {
     this.stopTimer()
     var request = new chrome.cast.media.SeekRequest()
-    request.currentTime = time * this.currentMedia.media.duration / 100
+    request.currentTime = time
     this.currentMedia.seek(request,
-      () => this.startTimer(), () => console.log('seek failed'))
+      () => this.startTimer(), () => Log.warn('seek failed'))
   }
 
   startTimer() {
@@ -57,6 +57,10 @@ export default class ChromecastPlayback extends Playback {
   stopTimer() {
     clearInterval(this.timer)
     this.timer = null
+  }
+
+  getDuration() {
+    return this.currentMedia.media.duration
   }
 
   isPlaying() {
