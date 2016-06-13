@@ -33,6 +33,10 @@ export default class ChromecastPlugin extends UICorePlugin {
   static get Movie() { return 'movie' }
   static get TvShow() { return 'tv_show' }
   static get Generic() { return 'none' }
+
+  static get version() { return VERSION }
+  get version() { return VERSION }
+
   get name() { return 'chromecast' }
   get tagName() { return 'button' }
   get attributes() {
