@@ -154,6 +154,7 @@ export default class ChromecastPlugin extends UICorePlugin {
     let options = assign({}, this.originalPlayback.options, {
       currentMedia: mediaSession,
       mediaControl: this.core.mediaControl,
+      poster: this.core.options.poster,
       settings: this.originalPlayback.settings
     })
     this.src = this.originalPlayback.src
