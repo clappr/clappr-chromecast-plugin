@@ -44,6 +44,11 @@ export default class ChromecastPlugin extends UICorePlugin {
       'class' : 'chromecast-button'
     }
   }
+  get events() {
+    return {
+      'click': 'click'
+    }
+  }
   constructor(core) {
     super(core)
     if (Browser.isChrome) {
@@ -138,7 +143,6 @@ export default class ChromecastPlugin extends UICorePlugin {
   launchSuccess(session) {
     this.renderConnected()
     clearInterval(this.connectAnimInterval)
-    this.connectAnimInterval = null
     this.core.mediaControl.resetKeepVisible()
     Log.debug(this.name, 'launch success - session: ' + session.sessionId)
     this.newSession(session)
@@ -148,7 +152,6 @@ export default class ChromecastPlugin extends UICorePlugin {
     Log.debug(this.name, 'error on launch', e)
     this.renderDisconnected()
     clearInterval(this.connectAnimInterval)
-    this.connectAnimInterval = null
     this.core.mediaControl.resetKeepVisible()
     this.container.play()
   }
@@ -290,6 +293,7 @@ export default class ChromecastPlugin extends UICorePlugin {
     if (!this.session) {
       let position = 0
       let connectingIcons = [connecting1IconSvg, connecting2IconSvg, connecting3IconSvg]
+      clearInterval(this.connectAnimInterval)
       this.connectAnimInterval = setInterval(() => {
         this.$el.html(connectingIcons[position])
         position = (position + 1) % 3
@@ -327,7 +331,6 @@ export default class ChromecastPlugin extends UICorePlugin {
 
   render() {
     this.session ? this.renderConnected() : this.renderDisconnected()
-    this.$el.click(() => this.click())
     this.core.mediaControl.$el.find('.media-control-right-panel[data-media-control]').append(this.$el)
     let style = Styler.getStyleFor(chromecastStyle, {baseUrl: this.core.options.baseUrl})
     this.core.$el.append(style)
