@@ -1,13 +1,15 @@
 import {Events, Log, Playback, template} from 'Clappr'
 import chromecastHTML from './public/chromecast.html'
 
-var TICK_INTERVAL = 100
+const TICK_INTERVAL = 100
 
 export default class ChromecastPlayback extends Playback {
 
   get name() { return 'chromecast_playback' }
   get template() { return template(chromecastHTML) }
   get attributes() { return { class: 'chromecast-playback' } }
+
+  get isReady() { return true }
 
   constructor(options) {
     super(options)
@@ -16,10 +18,15 @@ export default class ChromecastPlayback extends Playback {
     this.currentMedia = options.currentMedia
     this.mediaControl = options.mediaControl
     this.currentMedia.addUpdateListener(() => this.onMediaStatusUpdate())
+    this.settings = options.settings
+    let noVolume = (name) => name != 'volume'
+    this.settings.default && (this.settings.default = this.settings.default.filter(noVolume))
+    this.settings.left && (this.settings.left = this.settings.left.filter(noVolume))
+    this.settings.right && (this.settings.right = this.settings.right.filter(noVolume))
   }
 
   render() {
-    var template = this.template()
+    let template = this.template()
     this.$el.html(template)
     if (this.options.poster) {
       this.$el.find('.chromecast-playback-background').css('background-image', 'url(' + this.options.poster + ')')
@@ -44,10 +51,17 @@ export default class ChromecastPlayback extends Playback {
 
   seek(time) {
     this.stopTimer()
-    var request = new chrome.cast.media.SeekRequest()
+    let request = new chrome.cast.media.SeekRequest()
     request.currentTime = time
     this.currentMedia.seek(request,
       () => this.startTimer(), () => Log.warn('seek failed'))
+  }
+
+  seekPercentage(percentage) {
+    if (percentage >= 0 && percentage <= 100) {
+      let duration = this.getDuration()
+      this.seek(percentage * duration / 100)
+    }
   }
 
   startTimer() {
@@ -65,6 +79,10 @@ export default class ChromecastPlayback extends Playback {
 
   isPlaying() {
     return this.currentMedia.playerState === 'PLAYING' || this.currentMedia.playerState === 'BUFFERING'
+  }
+
+  getPlaybackType() {
+    return this.currentMedia.streamType == 'LIVE' ? Playback.LIVE : Playback.VOD
   }
 
   onMediaStatusUpdate() {
@@ -92,8 +110,8 @@ export default class ChromecastPlayback extends Playback {
   }
 
   updateMediaControl() {
-    var position = this.currentMedia.getEstimatedTime()
-    var duration = this.currentMedia.media.duration
+    let position = this.currentMedia.getEstimatedTime()
+    let duration = this.currentMedia.media.duration
     this.trigger(Events.PLAYBACK_TIMEUPDATE, {current: position, total: duration}, this.name)
   }
 
