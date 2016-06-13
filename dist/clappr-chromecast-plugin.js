@@ -131,7 +131,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  _createClass(ChromecastPlugin, [{
 	    key: 'version',
 	    get: function get() {
-	      return ("0.0.3");
+	      return ("0.0.4");
 	    }
 	  }, {
 	    key: 'name',
@@ -148,6 +148,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	    get: function get() {
 	      return {
 	        'class': 'chromecast-button'
+	      };
+	    }
+	  }, {
+	    key: 'events',
+	    get: function get() {
+	      return {
+	        'click': 'click'
 	      };
 	    }
 	  }], [{
@@ -168,7 +175,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'version',
 	    get: function get() {
-	      return ("0.0.3");
+	      return ("0.0.4");
 	    }
 	  }]);
 
@@ -293,7 +300,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function launchSuccess(session) {
 	      this.renderConnected();
 	      clearInterval(this.connectAnimInterval);
-	      this.connectAnimInterval = null;
 	      this.core.mediaControl.resetKeepVisible();
 	      _Clappr.Log.debug(this.name, 'launch success - session: ' + session.sessionId);
 	      this.newSession(session);
@@ -304,7 +310,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      _Clappr.Log.debug(this.name, 'error on launch', e);
 	      this.renderDisconnected();
 	      clearInterval(this.connectAnimInterval);
-	      this.connectAnimInterval = null;
 	      this.core.mediaControl.resetKeepVisible();
 	      this.container.play();
 	    }
@@ -479,6 +484,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	        (function () {
 	          var position = 0;
 	          var connectingIcons = [_publicIc_cast0_24dpSvg2['default'], _publicIc_cast1_24dpSvg2['default'], _publicIc_cast2_24dpSvg2['default']];
+	          clearInterval(_this6.connectAnimInterval);
 	          _this6.connectAnimInterval = setInterval(function () {
 	            _this6.$el.html(connectingIcons[position]);
 	            position = (position + 1) % 3;
@@ -522,12 +528,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'render',
 	    value: function render() {
-	      var _this7 = this;
-
 	      this.session ? this.renderConnected() : this.renderDisconnected();
-	      this.$el.click(function () {
-	        return _this7.click();
-	      });
 	      this.core.mediaControl.$el.find('.media-control-right-panel[data-media-control]').append(this.$el);
 	      var style = _Clappr.Styler.getStyleFor(_publicStyleScss2['default'], { baseUrl: this.core.options.baseUrl });
 	      this.core.$el.append(style);
