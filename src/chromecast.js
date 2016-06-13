@@ -238,25 +238,25 @@ export default class ChromecastPlugin extends UICorePlugin {
 
   createMediaMetadata() {
     let options = this.core.options.chromecast || {}
-    options.metadata || (options.metadata = {})
-    let type = options.metadata.type
+    options.media || (options.media = {})
+    let type = options.media.type
 
     let metadata = this.createCastMediaMetadata(type)
-    metadata.title = options.metadata.title
-    metadata.subtitle = options.metadata.subtitle
-    metadata.releaseDate = options.metadata.releaseDate
+    metadata.title = options.media.title
+    metadata.subtitle = options.media.subtitle
+    metadata.releaseDate = options.media.releaseDate
 
     if (type === ChromecastPlugin.TvShow) {
-      metadata.episode = options.metadata.episode
-      metadata.originalAirdate = options.metadata.originalAirdate
-      metadata.season = options.metadata.season
-      metadata.seriesTitle = options.metadata.seriesTitle
+      metadata.episode = options.media.episode
+      metadata.originalAirdate = options.media.originalAirdate
+      metadata.season = options.media.season
+      metadata.seriesTitle = options.media.seriesTitle
     } else if (type === ChromecastPlugin.Movie) {
-      metadata.studio = options.metadata.studio
+      metadata.studio = options.media.studio
     }
 
-    if (options.metadata.images) {
-      metadata.images = options.metadata.images.map((url) => new chrome.cast.Image(url))
+    if (options.media.images) {
+      metadata.images = options.media.images.map((url) => new chrome.cast.Image(url))
     }
     if (!metadata.images && this.core.options.poster) {
       metadata.images = [new chrome.cast.Image(this.core.options.poster)]

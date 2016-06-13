@@ -57,7 +57,7 @@ var player = new Clappr.Player({
   width: 640,
   plugins: [ChromecastPlugin],
   chromecast: {
-    metadata: {
+    media: {
       type: ChromecastPlugin.Movie,
       title: 'Awesome Hot Air Balloon Slackline',
       subtitle: 'You won\'t get much closer to Skylining than this!'
@@ -102,7 +102,7 @@ player.attachTo(playerElement);
         width: 640,
         plugins: [ChromecastPlugin],
         chromecast: {
-          metadata: {
+          media: {
             title: 'Awesome Hot Air Balloon Slackline',
             subtitle: 'You won\'t get much closer to Skylining than this!'
           }
