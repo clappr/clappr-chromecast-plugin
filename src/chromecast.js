@@ -50,7 +50,7 @@ export default class ChromecastPlugin extends UICorePlugin {
 
   bindEvents() {
     this.container = this.container || this.core.getCurrentContainer()
-    this.listenTo(this.core.mediaControl, Events.MEDIACONTROL_RENDERED, this.settingsUpdate)
+    this.listenTo(this.core.mediaControl, Events.MEDIACONTROL_RENDERED, this.render)
     this.listenTo(this.core.mediaControl, Events.MEDIACONTROL_CONTAINERCHANGED, this.containerChanged)
     if (this.container) {
       this.listenTo(this.container, Events.CONTAINER_TIMEUPDATE, this.containerTimeUpdate)
@@ -246,10 +246,6 @@ export default class ChromecastPlugin extends UICorePlugin {
       }, 600)
       this.core.mediaControl.setKeepVisible()
     }
-  }
-
-  settingsUpdate() {
-    this.core.mediaControl.$el.find('.media-control-right-panel[data-media-control]').append(this.$el)
   }
 
   containerChanged() {
