@@ -52,12 +52,17 @@
 
 var player = new Clappr.Player({
   source: 'http://clappr.io/highline.mp4',
-  baseUrl: '/latest',
   poster: 'http://clappr.io/poster.png',
-  mute: true,
   height: 360,
   width: 640,
-  plugins: [ChromecastPlugin]
+  plugins: [ChromecastPlugin],
+  chromecast: {
+    metadata: {
+      type: ChromecastPlugin.Movie,
+      title: 'Awesome Hot Air Balloon Slackline',
+      subtitle: 'You won\'t get much closer to Skylining than this!'
+    }
+  }
 });
 
 player.attachTo(playerElement);
@@ -93,10 +98,15 @@ player.attachTo(playerElement);
       var player = new Clappr.Player({
         source: urlParams.src || 'http://clappr.io/highline.mp4',
         poster: 'http://clappr.io/poster.png',
-        mute: true,
         height: 360,
         width: 640,
-        plugins: [ChromecastPlugin]
+        plugins: [ChromecastPlugin],
+        chromecast: {
+          metadata: {
+            title: 'Awesome Hot Air Balloon Slackline',
+            subtitle: 'You won\'t get much closer to Skylining than this!'
+          }
+        }
       });
 
       player.attachTo(playerElement);
