@@ -1,6 +1,6 @@
 {
   "name": "clappr-chromecast-plugin",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Chromecast support for Clappr",
   "main": "dist/clappr-chromecast-plugin.js",
   "scripts": {
