@@ -12,8 +12,8 @@ const DEVICE_STATE = {
   'IDLE' : 0,
   'ACTIVE' : 1,
   'WARNING' : 2,
-  'ERROR' : 3,
-};
+  'ERROR' : 3
+}
 
 const DEFAULT_CLAPPR_APP_ID = '9DFB77C0'
 
@@ -67,10 +67,10 @@ export default class ChromecastPlugin extends UICorePlugin {
 
   embedScript() {
     if (!window.chrome.cast || !window.chrome.cast.isAvailable) {
-      var script = document.createElement('script')
-      script.setAttribute("type", "text/javascript")
-      script.setAttribute("async", "async")
-      script.setAttribute("src", "https://www.gstatic.com/cv/js/sender/v1/cast_sender.js")
+      let script = document.createElement('script')
+      script.setAttribute('type', 'text/javascript')
+      script.setAttribute('async', 'async')
+      script.setAttribute('src', 'https://www.gstatic.com/cv/js/sender/v1/cast_sender.js')
       script.onload = () => this.bootstrapCastApi()
       document.body.appendChild(script)
     } else {
@@ -81,7 +81,7 @@ export default class ChromecastPlugin extends UICorePlugin {
   bootstrapCastApi() {
     if (!window.chrome.cast || !window.chrome.cast.isAvailable) {
       window['__onGCastApiAvailable'] = (loaded, errorInfo) => {
-        if (!!loaded) {
+        if (loaded) {
           this.appId = this.appId || DEFAULT_CLAPPR_APP_ID
           this.initializeCastApi()
         } else {
@@ -96,9 +96,9 @@ export default class ChromecastPlugin extends UICorePlugin {
   }
 
   initializeCastApi() {
-    var autoJoinPolicy = chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
-    var sessionRequest = new chrome.cast.SessionRequest(this.appId)
-    var apiConfig = new chrome.cast.ApiConfig(sessionRequest,
+    let autoJoinPolicy = chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
+    let sessionRequest = new chrome.cast.SessionRequest(this.appId)
+    let apiConfig = new chrome.cast.ApiConfig(sessionRequest,
       (session) => this.sessionListener(session), (e) => this.receiverListener(e), autoJoinPolicy)
     chrome.cast.initialize(apiConfig, () => Log.debug(this.name, 'init success'), () => Log.warn(this.name, 'init error'))
   }
@@ -120,10 +120,10 @@ export default class ChromecastPlugin extends UICorePlugin {
 
   receiverListener(e) {
     if ( e === chrome.cast.ReceiverAvailability.AVAILABLE ) {
-      Log.debug(this.name, "receiver found")
+      Log.debug(this.name, 'receiver found')
       this.show()
     } else {
-      Log.debug(this.name, "receiver list empty");
+      Log.debug(this.name, 'receiver list empty')
       this.hide()
     }
   }
@@ -147,21 +147,24 @@ export default class ChromecastPlugin extends UICorePlugin {
   }
 
   loadMediaSuccess(how, mediaSession) {
-    Log.debug(this.name, 'new media session', mediaSession, '(', how , ')');
+    Log.debug(this.name, 'new media session', mediaSession, '(', how , ')')
 
     this.originalPlayback = this.core.getCurrentPlayback()
 
-    var options = assign({}, this.originalPlayback.options, {currentMedia: mediaSession, mediaControl: this.core.mediaControl})
+    let options = assign({}, this.originalPlayback.options, {
+      currentMedia: mediaSession,
+      mediaControl: this.core.mediaControl,
+      settings: this.originalPlayback.settings
+    })
     this.src = this.originalPlayback.src
     this.playbackProxy = new ChromecastPlayback(options)
-    this.playbackProxy.settings = this.originalPlayback.settings
     this.playbackProxy.render()
 
     this.mediaSession = mediaSession
 
     this.originalPlayback.$el.remove()
 
-    var container = this.core.getCurrentContainer()
+    let container = this.core.getCurrentContainer()
     container.$el.append(this.playbackProxy.$el)
     container.stopListening()
     container.playback = this.playbackProxy
@@ -170,7 +173,7 @@ export default class ChromecastPlugin extends UICorePlugin {
   }
 
   loadMediaError(e) {
-    Log.warn(this.name, "media error", e);
+    Log.warn(this.name, 'media error', e)
   }
 
   newSession(session) {
@@ -186,9 +189,9 @@ export default class ChromecastPlugin extends UICorePlugin {
   sessionStopped() {
     this.renderDisconnected()
 
-    var time = this.currentTime
+    let time = this.currentTime
 
-    var playerState = undefined
+    let playerState = undefined
     if (this.mediaSession) {
       playerState = this.mediaSession.playerState
       this.mediaSession = null
@@ -196,7 +199,7 @@ export default class ChromecastPlugin extends UICorePlugin {
 
     this.core.load(this.src || this.core.options.sources)
 
-    var container = this.core.getCurrentContainer()
+    let container = this.core.getCurrentContainer()
 
     if (this.playbackProxy) {
       if (this.playbackProxy.isPlaying() || playerState === 'PAUSED') {
@@ -211,12 +214,12 @@ export default class ChromecastPlugin extends UICorePlugin {
 
   loadMedia() {
     this.container.pause()
-    var src = this.container.options.src
-    var mimeType = ChromecastPlugin.mimeTypeFor(src)
-    Log.debug(this.name, "loading... " + src)
-    var mediaInfo = new chrome.cast.media.MediaInfo(src)
+    let src = this.container.options.src
+    let mimeType = ChromecastPlugin.mimeTypeFor(src)
+    Log.debug(this.name, 'loading... ' + src)
+    let mediaInfo = new chrome.cast.media.MediaInfo(src)
     mediaInfo.contentType = mimeType
-    var request = new chrome.cast.media.LoadRequest(mediaInfo)
+    let request = new chrome.cast.media.LoadRequest(mediaInfo)
     request.autoplay = true
     request.currentTime = this.currentTime || 0
     this.session.loadMedia(request, (mediaSession) => this.loadMediaSuccess('loadMedia', mediaSession), (e) => this.loadMediaError(e))
@@ -234,8 +237,8 @@ export default class ChromecastPlugin extends UICorePlugin {
     this.container.pause()
     chrome.cast.requestSession((session) => this.launchSuccess(session), (e) => this.launchError(e))
     if (!this.session) {
-      var position = 0
-      var connectingIcons = [connecting1IconSvg, connecting2IconSvg, connecting3IconSvg]
+      let position = 0
+      let connectingIcons = [connecting1IconSvg, connecting2IconSvg, connecting3IconSvg]
       this.connectAnimInterval = setInterval(() => {
         this.$el.html(connectingIcons[position])
         position = (position + 1) % 3
@@ -280,13 +283,13 @@ export default class ChromecastPlugin extends UICorePlugin {
     this.$el.click(() => this.click())
     this.core.mediaControl.$el.find('.media-control-right-panel[data-media-control]').append(this.$el)
     this.hide()
-    var style = Styler.getStyleFor(chromecastStyle, {baseUrl: this.core.options.baseUrl})
+    let style = Styler.getStyleFor(chromecastStyle, {baseUrl: this.core.options.baseUrl})
     this.core.$el.append(style)
     return this
   }
 
   static mimeTypeFor(srcUrl) {
-    var extension = (srcUrl.split('?')[0].match(/.*\.(.*)$/) || [])[1]
+    let extension = (srcUrl.split('?')[0].match(/.*\.(.*)$/) || [])[1]
     if (MIMETYPES[extension]) {
       return MIMETYPES[extension]
     } else if (srcUrl.indexOf('.ism') > -1) {
