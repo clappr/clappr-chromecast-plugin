@@ -145,6 +145,21 @@ return /******/ (function(modules) { // webpackBootstrap
 	        'class': 'chromecast-button'
 	      };
 	    }
+	  }], [{
+	    key: 'Movie',
+	    get: function get() {
+	      return 'movie';
+	    }
+	  }, {
+	    key: 'TvShow',
+	    get: function get() {
+	      return 'tv_show';
+	    }
+	  }, {
+	    key: 'Generic',
+	    get: function get() {
+	      return 'none';
+	    }
 	  }]);
 
 	  function ChromecastPlugin(core) {
@@ -164,7 +179,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'bindEvents',
 	    value: function bindEvents() {
 	      this.container = this.container || this.core.getCurrentContainer();
-	      this.listenTo(this.core.mediaControl, _Clappr.Events.MEDIACONTROL_RENDERED, this.settingsUpdate);
+	      this.listenTo(this.core.mediaControl, _Clappr.Events.MEDIACONTROL_RENDERED, this.render);
 	      this.listenTo(this.core.mediaControl, _Clappr.Events.MEDIACONTROL_CONTAINERCHANGED, this.containerChanged);
 	      if (this.container) {
 	        this.listenTo(this.container, _Clappr.Events.CONTAINER_TIMEUPDATE, this.containerTimeUpdate);
@@ -293,6 +308,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var options = (0, _lodashAssign2['default'])({}, this.originalPlayback.options, {
 	        currentMedia: mediaSession,
 	        mediaControl: this.core.mediaControl,
+	        poster: this.core.options.poster,
 	        settings: this.originalPlayback.settings
 	      });
 	      this.src = this.originalPlayback.src;
@@ -364,10 +380,8 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      this.container.pause();
 	      var src = this.container.options.src;
-	      var mimeType = ChromecastPlugin.mimeTypeFor(src);
 	      _Clappr.Log.debug(this.name, 'loading... ' + src);
-	      var mediaInfo = new chrome.cast.media.MediaInfo(src);
-	      mediaInfo.contentType = mimeType;
+	      var mediaInfo = this.createMediaInfo(src);
 	      var request = new chrome.cast.media.LoadRequest(mediaInfo);
 	      request.autoplay = true;
 	      request.currentTime = this.currentTime || 0;
@@ -376,6 +390,59 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }, function (e) {
 	        return _this5.loadMediaError(e);
 	      });
+	    }
+	  }, {
+	    key: 'createMediaInfo',
+	    value: function createMediaInfo(src) {
+	      var mimeType = ChromecastPlugin.mimeTypeFor(src);
+	      var mediaInfo = new chrome.cast.media.MediaInfo(src);
+	      mediaInfo.contentType = mimeType;
+	      var metadata = this.createMediaMetadata();
+	      mediaInfo.metadata = metadata;
+	      return mediaInfo;
+	    }
+	  }, {
+	    key: 'createMediaMetadata',
+	    value: function createMediaMetadata() {
+	      var options = this.core.options.chromecast || {};
+	      options.metadata || (options.metadata = {});
+	      var type = options.metadata.type;
+
+	      var metadata = this.createCastMediaMetadata(type);
+	      metadata.title = options.metadata.title;
+	      metadata.subtitle = options.metadata.subtitle;
+	      metadata.releaseDate = options.metadata.releaseDate;
+
+	      if (type === ChromecastPlugin.TvShow) {
+	        metadata.episode = options.metadata.episode;
+	        metadata.originalAirdate = options.metadata.originalAirdate;
+	        metadata.season = options.metadata.season;
+	        metadata.seriesTitle = options.metadata.seriesTitle;
+	      } else if (type === ChromecastPlugin.Movie) {
+	        metadata.studio = options.metadata.studio;
+	      }
+
+	      if (options.metadata.images) {
+	        metadata.images = options.metadata.images.map(function (url) {
+	          return new chrome.cast.Image(url);
+	        });
+	      }
+	      if (!metadata.images && this.core.options.poster) {
+	        metadata.images = [new chrome.cast.Image(this.core.options.poster)];
+	      }
+	      return metadata;
+	    }
+	  }, {
+	    key: 'createCastMediaMetadata',
+	    value: function createCastMediaMetadata(type) {
+	      switch (type) {
+	        case ChromecastPlugin.Movie:
+	          return new chrome.cast.media.MovieMediaMetadata();
+	        case ChromecastPlugin.TvShow:
+	          return new chrome.cast.media.TvShowMediaMetadata();
+	        default:
+	          return new chrome.cast.media.GenericMediaMetadata();
+	      }
 	    }
 	  }, {
 	    key: 'show',
@@ -409,11 +476,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	          _this6.core.mediaControl.setKeepVisible();
 	        })();
 	      }
-	    }
-	  }, {
-	    key: 'settingsUpdate',
-	    value: function settingsUpdate() {
-	      this.core.mediaControl.$el.find('.media-control-right-panel[data-media-control]').append(this.$el);
 	    }
 	  }, {
 	    key: 'containerChanged',
@@ -567,9 +629,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var template = this.template();
 	      this.$el.html(template);
 	      if (this.options.poster) {
-	        this.$el.find('.chromecast-playback-background').css('background-image', 'url(' + this.options.poster + ')');
+	        this.$('.chromecast-playback-background').css('background-image', 'url(' + this.options.poster + ')');
 	      } else {
-	        this.$el.find('.chromecast-playback-background').css('background-color', '#666');
+	        this.$('.chromecast-playback-background').css('background-color', '#666');
 	      }
 	    }
 	  }, {
