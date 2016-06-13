@@ -129,6 +129,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	  _inherits(ChromecastPlugin, _UICorePlugin);
 
 	  _createClass(ChromecastPlugin, [{
+	    key: 'version',
+	    get: function get() {
+	      return ("0.0.3");
+	    }
+	  }, {
 	    key: 'name',
 	    get: function get() {
 	      return 'chromecast';
@@ -159,6 +164,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'Generic',
 	    get: function get() {
 	      return 'none';
+	    }
+	  }, {
+	    key: 'version',
+	    get: function get() {
+	      return ("0.0.3");
 	    }
 	  }]);
 
@@ -405,25 +415,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'createMediaMetadata',
 	    value: function createMediaMetadata() {
 	      var options = this.core.options.chromecast || {};
-	      options.metadata || (options.metadata = {});
-	      var type = options.metadata.type;
+	      options.media || (options.media = {});
+	      var type = options.media.type;
 
 	      var metadata = this.createCastMediaMetadata(type);
-	      metadata.title = options.metadata.title;
-	      metadata.subtitle = options.metadata.subtitle;
-	      metadata.releaseDate = options.metadata.releaseDate;
+	      metadata.title = options.media.title;
+	      metadata.subtitle = options.media.subtitle;
+	      metadata.releaseDate = options.media.releaseDate;
 
 	      if (type === ChromecastPlugin.TvShow) {
-	        metadata.episode = options.metadata.episode;
-	        metadata.originalAirdate = options.metadata.originalAirdate;
-	        metadata.season = options.metadata.season;
-	        metadata.seriesTitle = options.metadata.seriesTitle;
+	        metadata.episode = options.media.episode;
+	        metadata.originalAirdate = options.media.originalAirdate;
+	        metadata.season = options.media.season;
+	        metadata.seriesTitle = options.media.seriesTitle;
 	      } else if (type === ChromecastPlugin.Movie) {
-	        metadata.studio = options.metadata.studio;
+	        metadata.studio = options.media.studio;
 	      }
 
-	      if (options.metadata.images) {
-	        metadata.images = options.metadata.images.map(function (url) {
+	      if (options.media.images) {
+	        metadata.images = options.media.images.map(function (url) {
 	          return new chrome.cast.Image(url);
 	        });
 	      }
@@ -514,12 +524,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function render() {
 	      var _this7 = this;
 
-	      this.renderDisconnected();
+	      this.session ? this.renderConnected() : this.renderDisconnected();
 	      this.$el.click(function () {
 	        return _this7.click();
 	      });
 	      this.core.mediaControl.$el.find('.media-control-right-panel[data-media-control]').append(this.$el);
-	      this.hide();
 	      var style = _Clappr.Styler.getStyleFor(_publicStyleScss2['default'], { baseUrl: this.core.options.baseUrl });
 	      this.core.$el.append(style);
 	      return this;
