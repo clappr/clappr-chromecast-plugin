@@ -4,7 +4,7 @@
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
   <script type="text/javascript" charset="utf-8" src="https://cdn.jsdelivr.net/clappr/latest/clappr.min.js"></script>
   <script type="text/javascript" charset="utf-8" src="latest/clappr-chromecast-plugin.js"></script>
-  <title>clappr-level-selector-plugin Test Page</title>
+  <title>clappr-chromecast-plugin Test Page</title>
   <script type="text/javascript" charset="utf-8">
 Clappr.Log.setLevel(0)
 window.onload = function() {
@@ -14,7 +14,7 @@ window.onload = function() {
     parentId: '#player-wrapper',
     width: 640, height: 360,
     autoPlay: true,
-    plugins: [Chromecast],
+    plugins: [ChromecastPlugin],
     chromecast: {
       metadata: {
         title: 'Awesome Hot Air Balloon Slackline',
