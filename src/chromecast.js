@@ -30,6 +30,9 @@ MIMETYPES['ogv'] = MIMETYPES['ogg']
 MIMETYPES['3gp'] = MIMETYPES['3gpp']
 
 export default class ChromecastPlugin extends UICorePlugin {
+  static get Movie() { return 'movie' }
+  static get TvShow() { return 'tv_show' }
+  static get Generic() { return 'none' }
   get name() { return 'chromecast' }
   get tagName() { return 'button' }
   get attributes() {
@@ -216,14 +219,57 @@ export default class ChromecastPlugin extends UICorePlugin {
   loadMedia() {
     this.container.pause()
     let src = this.container.options.src
-    let mimeType = ChromecastPlugin.mimeTypeFor(src)
     Log.debug(this.name, 'loading... ' + src)
-    let mediaInfo = new chrome.cast.media.MediaInfo(src)
-    mediaInfo.contentType = mimeType
+    let mediaInfo = this.createMediaInfo(src)
     let request = new chrome.cast.media.LoadRequest(mediaInfo)
     request.autoplay = true
     request.currentTime = this.currentTime || 0
     this.session.loadMedia(request, (mediaSession) => this.loadMediaSuccess('loadMedia', mediaSession), (e) => this.loadMediaError(e))
+  }
+
+  createMediaInfo(src) {
+    let mimeType = ChromecastPlugin.mimeTypeFor(src)
+    let mediaInfo = new chrome.cast.media.MediaInfo(src)
+    mediaInfo.contentType = mimeType
+    let metadata = this.createMediaMetadata()
+    mediaInfo.metadata = metadata
+    return mediaInfo
+  }
+
+  createMediaMetadata() {
+    let options = this.core.options.chromecast || {}
+    options.metadata || (options.metadata = {})
+    let type = options.metadata.type
+
+    let metadata = this.createCastMediaMetadata(type)
+    metadata.title = options.metadata.title
+    metadata.subtitle = options.metadata.subtitle
+    metadata.releaseDate = options.metadata.releaseDate
+
+    if (type === ChromecastPlugin.TvShow) {
+      metadata.episode = options.metadata.episode
+      metadata.originalAirdate = options.metadata.originalAirdate
+      metadata.season = options.metadata.season
+      metadata.seriesTitle = options.metadata.seriesTitle
+    } else if (type === ChromecastPlugin.Movie) {
+      metadata.studio = options.metadata.studio
+    }
+
+    if (options.metadata.images) {
+      metadata.images = options.metadata.images.map((url) => new chrome.cast.Image(url))
+    }
+    if (!metadata.images && this.core.options.poster) {
+      metadata.images = [new chrome.cast.Image(this.core.options.poster)]
+    }
+    return metadata
+  }
+
+  createCastMediaMetadata(type) {
+    switch (type) {
+    case ChromecastPlugin.Movie: return new chrome.cast.media.MovieMediaMetadata()
+    case ChromecastPlugin.TvShow: return new chrome.cast.media.TvShowMediaMetadata()
+    default: return new chrome.cast.media.GenericMediaMetadata()
+    }
   }
 
   show() {
