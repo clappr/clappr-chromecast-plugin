@@ -3,7 +3,7 @@
 <head>
   <meta http-equiv="content-type" content="text/html; charset=utf-8" />
   <script type="text/javascript" charset="utf-8" src="https://cdn.jsdelivr.net/clappr/latest/clappr.min.js"></script>
-  <script type="text/javascript" charset="utf-8" src="latest/clappr-chromecast-plugin.js"></script>
+  <script type="text/javascript" charset="utf-8" src="https://cdn.jsdelivr.net/clappr.chromecast-plugin/latest/clappr-chromecast-plugin.min.js"></script>
   <title>clappr-chromecast-plugin Test Page</title>
   <script type="text/javascript" charset="utf-8">
 Clappr.Log.setLevel(0)
@@ -16,6 +16,7 @@ window.onload = function() {
     autoPlay: true,
     plugins: [ChromecastPlugin],
     chromecast: {
+      appId: '9DFB77C0',
       media: {
         title: 'Awesome Hot Air Balloon Slackline',
         subtitle: 'You won\'t get much closer to Skylining than this!'
