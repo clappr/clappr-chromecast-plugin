@@ -131,7 +131,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  _createClass(ChromecastPlugin, [{
 	    key: 'version',
 	    get: function get() {
-	      return ("0.0.4");
+	      return ("0.0.5");
 	    }
 	  }, {
 	    key: 'name',
@@ -157,6 +157,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	        'click': 'click'
 	      };
 	    }
+	  }, {
+	    key: 'options',
+	    get: function get() {
+	      return this.core.options.chromecast || (this.core.options.chromecast = {});
+	    }
 	  }], [{
 	    key: 'Movie',
 	    get: function get() {
@@ -175,7 +180,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'version',
 	    get: function get() {
-	      return ("0.0.4");
+	      return ("0.0.5");
 	    }
 	  }]);
 
@@ -184,7 +189,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	    _get(Object.getPrototypeOf(ChromecastPlugin.prototype), 'constructor', this).call(this, core);
 	    if (_Clappr.Browser.isChrome) {
-	      this.appId = core.options.chromecastAppId || DEFAULT_CLAPPR_APP_ID;
+	      this.appId = this.options.appId || DEFAULT_CLAPPR_APP_ID;
 	      this.deviceState = DEVICE_STATE.IDLE;
 	      this.embedScript();
 	    } else {
@@ -411,7 +416,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function createMediaInfo(src) {
 	      var mimeType = ChromecastPlugin.mimeTypeFor(src);
 	      var mediaInfo = new chrome.cast.media.MediaInfo(src);
-	      mediaInfo.contentType = mimeType;
+	      mediaInfo.contentType = this.options.contentType || mimeType;
 	      var metadata = this.createMediaMetadata();
 	      mediaInfo.metadata = metadata;
 	      return mediaInfo;
@@ -419,26 +424,25 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'createMediaMetadata',
 	    value: function createMediaMetadata() {
-	      var options = this.core.options.chromecast || {};
-	      options.media || (options.media = {});
-	      var type = options.media.type;
+	      this.options.media || (this.options.media = {});
+	      var type = this.options.media.type;
 
 	      var metadata = this.createCastMediaMetadata(type);
-	      metadata.title = options.media.title;
-	      metadata.subtitle = options.media.subtitle;
-	      metadata.releaseDate = options.media.releaseDate;
+	      metadata.title = this.options.media.title;
+	      metadata.subtitle = this.options.media.subtitle;
+	      metadata.releaseDate = this.options.media.releaseDate;
 
 	      if (type === ChromecastPlugin.TvShow) {
-	        metadata.episode = options.media.episode;
-	        metadata.originalAirdate = options.media.originalAirdate;
-	        metadata.season = options.media.season;
-	        metadata.seriesTitle = options.media.seriesTitle;
+	        metadata.episode = this.options.media.episode;
+	        metadata.originalAirdate = this.options.media.originalAirdate;
+	        metadata.season = this.options.media.season;
+	        metadata.seriesTitle = this.options.media.seriesTitle;
 	      } else if (type === ChromecastPlugin.Movie) {
-	        metadata.studio = options.media.studio;
+	        metadata.studio = this.options.media.studio;
 	      }
 
-	      if (options.media.images) {
-	        metadata.images = options.media.images.map(function (url) {
+	      if (this.options.media.images) {
+	        metadata.images = this.options.media.images.map(function (url) {
 	          return new chrome.cast.Image(url);
 	        });
 	      }
@@ -778,7 +782,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 
 	// module
-	exports.push([module.id, ".chromecast-playback {\n  height: 100%;\n  width: 100%; }\n  .chromecast-playback .chromecast-playback-background, .chromecast-playback .chromecast-playback-overlay {\n    position: absolute;\n    height: 100%;\n    width: 100%; }\n  .chromecast-playback .chromecast-playback-background {\n    background-size: contain; }\n  .chromecast-playback .chromecast-playback-overlay {\n    background-color: #000;\n    opacity: 0.4; }\n\n.chromecast-button {\n  background: transparent;\n  border: 0;\n  width: 32px;\n  height: 32px;\n  font-size: 22px;\n  line-height: 32px;\n  letter-spacing: 0;\n  margin: 0 6px;\n  color: #fff;\n  opacity: 0.5;\n  vertical-align: middle;\n  text-align: left;\n  cursor: pointer;\n  -webkit-font-smoothing: antialiased;\n  -moz-osx-font-smoothing: grayscale;\n  -webkit-transition: all 0.1s ease;\n  -moz-transition: all 0.1s ease;\n  -o-transition: all 0.1s ease;\n  transition: all 0.1s ease; }\n  .chromecast-button:hover {\n    opacity: 0.75;\n    text-shadow: rgba(255, 255, 255, 0.8) 0 0 5px; }\n  .chromecast-button:focus {\n    outline: none; }\n  .chromecast-button svg #cast, .chromecast-button svg #cast-on, .chromecast-button svg #Path {\n    stroke: #fff;\n    fill: #fff; }\n", ""]);
+	exports.push([module.id, ".chromecast-playback {\n  height: 100%;\n  width: 100%; }\n  .chromecast-playback .chromecast-playback-background, .chromecast-playback .chromecast-playback-overlay {\n    position: absolute;\n    height: 100%;\n    width: 100%; }\n  .chromecast-playback .chromecast-playback-background {\n    background-size: contain; }\n  .chromecast-playback .chromecast-playback-overlay {\n    background-color: #000;\n    opacity: 0.4; }\n\n.chromecast-button {\n  background: transparent;\n  border: 0;\n  width: 32px;\n  height: 32px;\n  font-size: 22px;\n  line-height: 32px;\n  letter-spacing: 0;\n  margin: 0 6px;\n  color: #fff;\n  opacity: 0.5;\n  vertical-align: middle;\n  text-align: left;\n  cursor: pointer;\n  -webkit-font-smoothing: antialiased;\n  -moz-osx-font-smoothing: grayscale;\n  -webkit-transition: all 0.1s ease;\n  -moz-transition: all 0.1s ease;\n  -o-transition: all 0.1s ease;\n  transition: all 0.1s ease; }\n  .chromecast-button:hover {\n    opacity: 0.75;\n    text-shadow: rgba(255, 255, 255, 0.8) 0 0 5px; }\n  .chromecast-button:focus {\n    outline: none; }\n  .chromecast-button svg {\n    width: 24px;\n    height: 24px; }\n    .chromecast-button svg #cast, .chromecast-button svg #cast-on, .chromecast-button svg #Path {\n      fill: #fff;\n      stroke: #fff;\n      stroke-width: 0.5px; }\n", ""]);
 
 	// exports
 
@@ -2023,31 +2027,31 @@ return /******/ (function(modules) { // webpackBootstrap
 /* 17 */
 /***/ function(module, exports) {
 
-	module.exports = "<svg viewBox=\"0 0 24 24\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns:sketch=\"http://www.bohemiancoding.com/sketch/ns\"><title>ic_cast_black_24dp</title><desc>Created with Sketch.</desc><defs></defs><g id=\"Page-1\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\" sketch:type=\"MSPage\"><g id=\"ic_cast_black_24dp\" sketch:type=\"MSArtboardGroup\"><g id=\"ic_remove_circle_white_24dp\" sketch:type=\"MSLayerGroup\"><path d=\"M1,18 L1,21 L4,21 C4,19.34 2.66,18 1,18 L1,18 Z M1,14 L1,16 C3.76,16 6,18.24 6,21 L8,21 C8,17.13 4.87,14 1,14 L1,14 Z M1,10 L1,12 C5.97,12 10,16.03 10,21 L12,21 C12,14.92 7.07,10 1,10 L1,10 Z M21,3 L3,3 C1.9,3 1,3.9 1,5 L1,8 L3,8 L3,5 L21,5 L21,19 L14,19 L14,21 L21,21 C22.1,21 23,20.1 23,19 L23,5 C23,3.9 22.1,3 21,3 L21,3 Z\" id=\"cast\" fill=\"#000000\" sketch:type=\"MSShapeGroup\"></path><rect id=\"bounds\" sketch:type=\"MSShapeGroup\" x=\"0\" y=\"0\" width=\"24\" height=\"24\"></rect></g></g><g id=\"assets\" sketch:type=\"MSLayerGroup\" transform=\"translate(-208.000000, -106.000000)\"><g id=\"64px\" transform=\"translate(0.000000, 114.000000)\"></g></g></g></svg>"
+	module.exports = "<svg xmlns=\"http://www.w3.org/2000/svg\"><g id=\"Page-1\" fill=\"none\" fill-rule=\"evenodd\"><g id=\"ic_cast_black_24dp\"><g id=\"ic_remove_circle_white_24dp\"><path d=\"M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z\" id=\"cast\" fill=\"#000\"></path><path id=\"bounds\" d=\"M0 0h24v24H0z\"></path></g></g></g></svg>"
 
 /***/ },
 /* 18 */
 /***/ function(module, exports) {
 
-	module.exports = "<svg viewBox=\"0 0 24 24\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns:sketch=\"http://www.bohemiancoding.com/sketch/ns\"><title>ic_cast0_black_24dp</title><desc>Created with Sketch.</desc><defs></defs><g id=\"Page-1\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\" sketch:type=\"MSPage\"><g id=\"ic_cast0_black_24dp\" sketch:type=\"MSArtboardGroup\"><g id=\"ic_remove_circle_white_24dp\" sketch:type=\"MSLayerGroup\"><path d=\"M1,18 L1,21 L4,21 C4,19.34 2.66,18 1,18 L1,18 Z\" id=\"Path\" fill=\"#000000\" sketch:type=\"MSShapeGroup\"></path><path d=\"M1,14 L1,16 C3.76,16 6,18.24 6,21 L8,21 C8,17.13 4.87,14 1,14 L1,14 Z\" id=\"Path\" opacity=\"0.3\" fill=\"#000000\" sketch:type=\"MSShapeGroup\"></path><path d=\"M1,10 L1,12 C5.97,12 10,16.03 10,21 L12,21 C12,14.92 7.07,10 1,10 L1,10 Z\" id=\"Path\" opacity=\"0.3\" fill=\"#000000\" sketch:type=\"MSShapeGroup\"></path><path d=\"M21,3 L3,3 C1.9,3 1,3.9 1,5 L1,8 L3,8 L3,5 L21,5 L21,19 L14,19 L14,21 L21,21 C22.1,21 23,20.1 23,19 L23,5 C23,3.9 22.1,3 21,3 L21,3 Z\" id=\"Path\" fill=\"#000000\" sketch:type=\"MSShapeGroup\"></path><rect id=\"bounds\" sketch:type=\"MSShapeGroup\" x=\"0\" y=\"0\" width=\"24\" height=\"24\"></rect></g></g><g id=\"assets\" sketch:type=\"MSLayerGroup\" transform=\"translate(-240.000000, -106.000000)\"><g id=\"64px\" transform=\"translate(0.000000, 114.000000)\"></g></g></g></svg>"
+	module.exports = "<svg xmlns=\"http://www.w3.org/2000/svg\"><g id=\"Page-1\" fill=\"none\" fill-rule=\"evenodd\"><g id=\"ic_cast0_black_24dp\"><g id=\"ic_remove_circle_white_24dp\"><path d=\"M1 18v3h3c0-1.66-1.34-3-3-3z\" id=\"Path\" fill=\"#000\"></path><path d=\"M1 14v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7z\" id=\"Path\" opacity=\".3\" fill=\"#000\"></path><path d=\"M1 10v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11z\" id=\"Path\" opacity=\".3\" fill=\"#000\"></path><path d=\"M21 3H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z\" id=\"Path\" fill=\"#000\"></path><path id=\"bounds\" d=\"M0 0h24v24H0z\"></path></g></g></g></svg>"
 
 /***/ },
 /* 19 */
 /***/ function(module, exports) {
 
-	module.exports = "<svg viewBox=\"0 0 24 24\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns:sketch=\"http://www.bohemiancoding.com/sketch/ns\"><title>ic_cast1_black_24dp</title><desc>Created with Sketch.</desc><defs></defs><g id=\"Page-1\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\" sketch:type=\"MSPage\"><g id=\"ic_cast1_black_24dp\" sketch:type=\"MSArtboardGroup\"><g id=\"ic_remove_circle_white_24dp\" sketch:type=\"MSLayerGroup\"><path d=\"M1,18 L1,21 L4,21 C4,19.34 2.66,18 1,18 L1,18 Z\" id=\"Path\" opacity=\"0.3\" fill=\"#000000\" sketch:type=\"MSShapeGroup\"></path><path d=\"M1,14 L1,16 C3.76,16 6,18.24 6,21 L8,21 C8,17.13 4.87,14 1,14 L1,14 Z\" id=\"Path\" fill=\"#000000\" sketch:type=\"MSShapeGroup\"></path><path d=\"M1,10 L1,12 C5.97,12 10,16.03 10,21 L12,21 C12,14.92 7.07,10 1,10 L1,10 Z\" id=\"Path\" opacity=\"0.3\" fill=\"#000000\" sketch:type=\"MSShapeGroup\"></path><path d=\"M21,3 L3,3 C1.9,3 1,3.9 1,5 L1,8 L3,8 L3,5 L21,5 L21,19 L14,19 L14,21 L21,21 C22.1,21 23,20.1 23,19 L23,5 C23,3.9 22.1,3 21,3 L21,3 Z\" id=\"cast\" fill=\"#000000\" sketch:type=\"MSShapeGroup\"></path><rect id=\"bounds\" sketch:type=\"MSShapeGroup\" x=\"0\" y=\"0\" width=\"24\" height=\"24\"></rect></g></g><g id=\"assets\" sketch:type=\"MSLayerGroup\" transform=\"translate(-272.000000, -106.000000)\"><g id=\"64px\" transform=\"translate(0.000000, 114.000000)\"></g></g></g></svg>"
+	module.exports = "<svg xmlns=\"http://www.w3.org/2000/svg\"><g id=\"Page-1\" fill=\"none\" fill-rule=\"evenodd\"><g id=\"ic_cast1_black_24dp\"><g id=\"ic_remove_circle_white_24dp\"><path d=\"M1 18v3h3c0-1.66-1.34-3-3-3z\" id=\"Path\" opacity=\".3\" fill=\"#000\"></path><path d=\"M1 14v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7z\" id=\"Path\" fill=\"#000\"></path><path d=\"M1 10v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11z\" id=\"Path\" opacity=\".3\" fill=\"#000\"></path><path d=\"M21 3H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z\" id=\"cast\" fill=\"#000\"></path><path id=\"bounds\" d=\"M0 0h24v24H0z\"></path></g></g></g></svg>"
 
 /***/ },
 /* 20 */
 /***/ function(module, exports) {
 
-	module.exports = "<svg viewBox=\"0 0 24 24\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns:sketch=\"http://www.bohemiancoding.com/sketch/ns\"><title>ic_cast2_black_24dp</title><desc>Created with Sketch.</desc><defs></defs><g id=\"Page-1\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\" sketch:type=\"MSPage\"><g id=\"ic_cast2_black_24dp\" sketch:type=\"MSArtboardGroup\"><g id=\"ic_remove_circle_white_24dp\" sketch:type=\"MSLayerGroup\"><path d=\"M1,18 L1,21 L4,21 C4,19.34 2.66,18 1,18 L1,18 Z\" id=\"Path\" opacity=\"0.3\" fill=\"#000000\" sketch:type=\"MSShapeGroup\"></path><path d=\"M1,14 L1,16 C3.76,16 6,18.24 6,21 L8,21 C8,17.13 4.87,14 1,14 L1,14 Z\" id=\"Path\" opacity=\"0.3\" fill=\"#000000\" sketch:type=\"MSShapeGroup\"></path><path d=\"M1,10 L1,12 C5.97,12 10,16.03 10,21 L12,21 C12,14.92 7.07,10 1,10 L1,10 Z\" id=\"Path\" fill=\"#000000\" sketch:type=\"MSShapeGroup\"></path><path d=\"M21,3 L3,3 C1.9,3 1,3.9 1,5 L1,8 L3,8 L3,5 L21,5 L21,19 L14,19 L14,21 L21,21 C22.1,21 23,20.1 23,19 L23,5 C23,3.9 22.1,3 21,3 L21,3 Z\" id=\"cast\" fill=\"#000000\" sketch:type=\"MSShapeGroup\"></path><rect id=\"bounds\" sketch:type=\"MSShapeGroup\" x=\"0\" y=\"0\" width=\"24\" height=\"24\"></rect></g></g><g id=\"assets\" sketch:type=\"MSLayerGroup\" transform=\"translate(-304.000000, -106.000000)\"><g id=\"64px\" transform=\"translate(0.000000, 114.000000)\"></g></g></g></svg>"
+	module.exports = "<svg xmlns=\"http://www.w3.org/2000/svg\"><g id=\"Page-1\" fill=\"none\" fill-rule=\"evenodd\"><g id=\"ic_cast2_black_24dp\"><g id=\"ic_remove_circle_white_24dp\"><path d=\"M1 18v3h3c0-1.66-1.34-3-3-3zM1 14v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7z\" id=\"Path\" opacity=\".3\" fill=\"#000\"></path><path d=\"M1 10v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11z\" id=\"Path\" fill=\"#000\"></path><path d=\"M21 3H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z\" id=\"cast\" fill=\"#000\"></path><path id=\"bounds\" d=\"M0 0h24v24H0z\"></path></g></g></g></svg>"
 
 /***/ },
 /* 21 */
 /***/ function(module, exports) {
 
-	module.exports = "<svg viewBox=\"0 0 24 24\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\" xmlns:sketch=\"http://www.bohemiancoding.com/sketch/ns\"><title>ic_cast_connected_black_24dp</title><desc>Created with Sketch.</desc><defs></defs><g id=\"Page-1\" stroke=\"none\" stroke-width=\"1\" fill=\"none\" fill-rule=\"evenodd\" sketch:type=\"MSPage\"><g id=\"ic_cast_connected_black_24dp\" sketch:type=\"MSArtboardGroup\"><g id=\"ic_remove_circle_white_24dp\" sketch:type=\"MSLayerGroup\"><path d=\"M1,18 L1,21 L4,21 C4,19.34 2.66,18 1,18 L1,18 Z M1,14 L1,16 C3.76,16 6,18.24 6,21 L8,21 C8,17.13 4.87,14 1,14 L1,14 Z M19,7 L5,7 L5,8.63 C8.96,9.91 12.09,13.04 13.37,17 L19,17 L19,7 L19,7 Z M1,10 L1,12 C5.97,12 10,16.03 10,21 L12,21 C12,14.92 7.07,10 1,10 L1,10 Z M21,3 L3,3 C1.9,3 1,3.9 1,5 L1,8 L3,8 L3,5 L21,5 L21,19 L14,19 L14,21 L21,21 C22.1,21 23,20.1 23,19 L23,5 C23,3.9 22.1,3 21,3 L21,3 Z\" id=\"cast-on\" fill=\"#000000\" sketch:type=\"MSShapeGroup\"></path><rect id=\"bounds\" sketch:type=\"MSShapeGroup\" x=\"0\" y=\"0\" width=\"24\" height=\"24\"></rect></g></g><g id=\"assets\" sketch:type=\"MSLayerGroup\" transform=\"translate(-336.000000, -106.000000)\"><g id=\"64px\" transform=\"translate(0.000000, 114.000000)\"></g></g></g></svg>"
+	module.exports = "<svg xmlns=\"http://www.w3.org/2000/svg\"><g id=\"Page-1\" fill=\"none\" fill-rule=\"evenodd\"><g id=\"ic_cast_connected_black_24dp\"><g id=\"ic_remove_circle_white_24dp\"><path d=\"M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm18-7H5v1.63c3.96 1.28 7.09 4.41 8.37 8.37H19V7zM1 10v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z\" id=\"cast-on\" fill=\"#000\"></path><path id=\"bounds\" d=\"M0 0h24v24H0z\"></path></g></g></g></svg>"
 
 /***/ }
 /******/ ])
