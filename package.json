@@ -21,7 +21,7 @@
     "chromecast"
   ],
   "author": "Globo.com",
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "BSD-3-Clause",
   "bugs": {
     "url": "https://github.com/clappr/clappr-chromecast-plugin/issues"
   },
