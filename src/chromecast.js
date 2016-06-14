@@ -54,7 +54,7 @@ export default class ChromecastPlugin extends UICorePlugin {
   constructor(core) {
     super(core)
     if (Browser.isChrome) {
-      this.appId = core.options.chromecastAppId || DEFAULT_CLAPPR_APP_ID
+      this.appId = this.options.appId || DEFAULT_CLAPPR_APP_ID
       this.deviceState = DEVICE_STATE.IDLE
       this.embedScript()
     } else {
