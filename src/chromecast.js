@@ -49,6 +49,8 @@ export default class ChromecastPlugin extends UICorePlugin {
       'click': 'click'
     }
   }
+  get options() { return this.core.options.chromecast || (this.core.options.chromecast = {}) }
+
   constructor(core) {
     super(core)
     if (Browser.isChrome) {
@@ -237,33 +239,32 @@ export default class ChromecastPlugin extends UICorePlugin {
   createMediaInfo(src) {
     let mimeType = ChromecastPlugin.mimeTypeFor(src)
     let mediaInfo = new chrome.cast.media.MediaInfo(src)
-    mediaInfo.contentType = mimeType
+    mediaInfo.contentType = this.options.contentType || mimeType
     let metadata = this.createMediaMetadata()
     mediaInfo.metadata = metadata
     return mediaInfo
   }
 
   createMediaMetadata() {
-    let options = this.core.options.chromecast || {}
-    options.media || (options.media = {})
-    let type = options.media.type
+    this.options.media || (this.options.media = {})
+    let type = this.options.media.type
 
     let metadata = this.createCastMediaMetadata(type)
-    metadata.title = options.media.title
-    metadata.subtitle = options.media.subtitle
-    metadata.releaseDate = options.media.releaseDate
+    metadata.title = this.options.media.title
+    metadata.subtitle = this.options.media.subtitle
+    metadata.releaseDate = this.options.media.releaseDate
 
     if (type === ChromecastPlugin.TvShow) {
-      metadata.episode = options.media.episode
-      metadata.originalAirdate = options.media.originalAirdate
-      metadata.season = options.media.season
-      metadata.seriesTitle = options.media.seriesTitle
+      metadata.episode = this.options.media.episode
+      metadata.originalAirdate = this.options.media.originalAirdate
+      metadata.season = this.options.media.season
+      metadata.seriesTitle = this.options.media.seriesTitle
     } else if (type === ChromecastPlugin.Movie) {
-      metadata.studio = options.media.studio
+      metadata.studio = this.options.media.studio
     }
 
-    if (options.media.images) {
-      metadata.images = options.media.images.map((url) => new chrome.cast.Image(url))
+    if (this.options.media.images) {
+      metadata.images = this.options.media.images.map((url) => new chrome.cast.Image(url))
     }
     if (!metadata.images && this.core.options.poster) {
       metadata.images = [new chrome.cast.Image(this.core.options.poster)]
