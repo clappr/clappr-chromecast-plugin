@@ -48,9 +48,12 @@
   }
 
   svg {
+    width: 24px;
+    height: 24px;
     #cast, #cast-on, #Path {
-      stroke: #fff;
       fill: #fff;
+      stroke: #fff;
+      stroke-width: 0.5px;
     }
   }
 }
