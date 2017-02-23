@@ -1,4 +1,4 @@
-import {Browser, Events, Log, Styler, UICorePlugin} from 'Clappr'
+import {Browser, Events, Log, Styler, UICorePlugin} from 'clappr'
 import ChromecastPlayback from './chromecast_playback'
 import chromecastStyle from './public/style.scss'
 import assign from 'lodash.assign'

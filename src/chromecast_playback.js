@@ -1,4 +1,4 @@
-import {Events, Log, Playback, template} from 'Clappr'
+import {Events, Log, Playback, template} from 'clappr'
 import chromecastHTML from './public/chromecast.html'
 
 const TICK_INTERVAL = 100
