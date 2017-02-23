@@ -13,7 +13,6 @@ export default class ChromecastPlayback extends Playback {
 
   constructor(options) {
     super(options)
-    this.options = options
     this.src = options.src
     this.currentMedia = options.currentMedia
     this.mediaControl = options.mediaControl
