@@ -315,7 +315,7 @@ export default class ChromecastPlugin extends UICorePlugin {
   }
 
   containerPlay() {
-    if (this.session && (!this.mediaSession || this.mediaSession.playerState === 'IDLE')) {
+    if (this.session && (!this.mediaSession || this.mediaSession.playerState === 'IDLE' || this.mediaSession.playerState === 'PAUSED')) {
       Log.debug(this.name, 'load media')
       this.currentTime = this.currentTime || 0
       this.loadMedia()

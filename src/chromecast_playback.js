@@ -45,7 +45,7 @@ export default class ChromecastPlayback extends Playback {
 
   stop() {
     this.stopTimer()
-    this.currentMedia.stop()
+    this.currentMedia.pause() // FIXME: properly handle media stop
   }
 
   seek(time) {
