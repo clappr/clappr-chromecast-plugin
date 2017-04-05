@@ -333,8 +333,9 @@ export default class ChromecastPlugin extends UICorePlugin {
   render() {
     this.session ? this.renderConnected() : this.renderDisconnected()
     this.core.mediaControl.$el.find('.media-control-right-panel[data-media-control]').append(this.$el)
-    let style = Styler.getStyleFor(chromecastStyle, {baseUrl: this.core.options.baseUrl})
-    this.core.$el.append(style)
+    this.$style && this.$style.remove()
+    this.$style = Styler.getStyleFor(chromecastStyle, {baseUrl: this.core.options.baseUrl})
+    this.core.$el.append(this.$style)
     return this
   }
 
