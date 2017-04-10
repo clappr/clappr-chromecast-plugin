@@ -1,4 +1,4 @@
-import {Browser, Events, Log, Styler, UICorePlugin} from 'Clappr'
+import {Browser, Events, Log, Styler, UICorePlugin} from 'clappr'
 import ChromecastPlayback from './chromecast_playback'
 import chromecastStyle from './public/style.scss'
 import assign from 'lodash.assign'
@@ -53,6 +53,11 @@ export default class ChromecastPlugin extends UICorePlugin {
 
   constructor(core) {
     super(core)
+
+    this.bootTryDelay = this.options.bootTryDelay || 500      // Default is 500 milliseconds between each attempt
+    this.bootMaxTryCount = this.options.bootMaxTryCount || 6  // Default is 6 attempts (3 seconds)
+    this.bootTryCount = 0
+
     if (Browser.isChrome) {
       this.appId = this.options.appId || DEFAULT_CLAPPR_APP_ID
       this.deviceState = DEVICE_STATE.IDLE
@@ -80,7 +85,7 @@ export default class ChromecastPlugin extends UICorePlugin {
   }
 
   embedScript() {
-    if (!window.chrome.cast || !window.chrome.cast.isAvailable) {
+    if (!window.chrome || !window.chrome.cast || !window.chrome.cast.isAvailable) {
       let script = document.createElement('script')
       script.setAttribute('type', 'text/javascript')
       script.setAttribute('async', 'async')
@@ -93,19 +98,35 @@ export default class ChromecastPlugin extends UICorePlugin {
   }
 
   bootstrapCastApi() {
-    if (!window.chrome.cast || !window.chrome.cast.isAvailable) {
-      window['__onGCastApiAvailable'] = (loaded, errorInfo) => {
-        if (loaded) {
-          this.appId = this.appId || DEFAULT_CLAPPR_APP_ID
-          this.initializeCastApi()
-        } else {
-          Log.warn('GCastApi error', errorInfo)
-          this.disable()
+    this.bootTryCount++
+
+    if (this.bootTryCount > this.bootMaxTryCount) {
+      this.bootTryCount = 0
+      Log.warn('GCastApi bootstrap timeout')
+      this.disable()
+      return
+    }
+
+    // The "chrome" property may not be available immediately on some iOS devices
+    if (window.chrome) {
+      this.bootTryCount = 0
+
+      if (window.chrome.cast && window.chrome.cast.isAvailable) {
+        this.appId = this.appId || DEFAULT_CLAPPR_APP_ID
+        this.initializeCastApi()
+      } else {
+        window['__onGCastApiAvailable'] = (loaded, errorInfo) => {
+          if (loaded) {
+            this.appId = this.appId || DEFAULT_CLAPPR_APP_ID
+            this.initializeCastApi()
+          } else {
+            Log.warn('GCastApi error', errorInfo)
+            this.disable()
+          }
         }
       }
     } else {
-      this.appId = this.appId || DEFAULT_CLAPPR_APP_ID
-      this.initializeCastApi()
+      setTimeout(() => { this.bootstrapCastApi() }, this.bootTryDelay)
     }
   }
 
@@ -315,7 +336,7 @@ export default class ChromecastPlugin extends UICorePlugin {
   }
 
   containerPlay() {
-    if (this.session && (!this.mediaSession || this.mediaSession.playerStatus === 'IDLE')) {
+    if (this.session && (!this.mediaSession || this.mediaSession.playerState === 'IDLE' || this.mediaSession.playerState === 'PAUSED')) {
       Log.debug(this.name, 'load media')
       this.currentTime = this.currentTime || 0
       this.loadMedia()
@@ -333,8 +354,9 @@ export default class ChromecastPlugin extends UICorePlugin {
   render() {
     this.session ? this.renderConnected() : this.renderDisconnected()
     this.core.mediaControl.$el.find('.media-control-right-panel[data-media-control]').append(this.$el)
-    let style = Styler.getStyleFor(chromecastStyle, {baseUrl: this.core.options.baseUrl})
-    this.core.$el.append(style)
+    this.$style && this.$style.remove()
+    this.$style = Styler.getStyleFor(chromecastStyle, {baseUrl: this.core.options.baseUrl})
+    this.core.$el.append(this.$style)
     return this
   }
 

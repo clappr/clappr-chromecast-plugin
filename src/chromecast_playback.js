@@ -1,4 +1,4 @@
-import {Events, Log, Playback, template} from 'Clappr'
+import {Events, Log, Playback, template} from 'clappr'
 import chromecastHTML from './public/chromecast.html'
 
 const TICK_INTERVAL = 100
@@ -13,7 +13,6 @@ export default class ChromecastPlayback extends Playback {
 
   constructor(options) {
     super(options)
-    this.options = options
     this.src = options.src
     this.currentMedia = options.currentMedia
     this.mediaControl = options.mediaControl
@@ -46,7 +45,7 @@ export default class ChromecastPlayback extends Playback {
 
   stop() {
     this.stopTimer()
-    this.currentMedia.stop()
+    this.currentMedia.pause() // FIXME: properly handle media stop
   }
 
   seek(time) {

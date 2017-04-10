@@ -53,7 +53,12 @@ module.exports = {
     extensions: ['', '.js'],
   },
   externals: {
-    "Clappr": "Clappr",
+    clappr: {
+      amd: 'clappr',
+      commonjs: 'clappr',
+      commonjs2: 'clappr',
+      root: 'Clappr'
+    }
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
