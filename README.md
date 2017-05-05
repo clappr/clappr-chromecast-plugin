@@ -1,5 +1,7 @@
 # Clappr Chromecast Plugin
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/clappr/clappr-chromecast-plugin.svg)](https://greenkeeper.io/)
+
 A [Clappr](https://github.com/clappr/clappr) plugin that adds Chromecast support on Chrome browser. As with all apps running on Chromecast it requires the [Google Cast extension](https://chrome.google.com/webstore/detail/google-cast/boadgeojelhgndaghljhdicfkmllpafd) installed on the browser.
 
 Please notice it's still not production ready, as it lacks a way to select tracks (audio, subtitles), as well as display media information.
