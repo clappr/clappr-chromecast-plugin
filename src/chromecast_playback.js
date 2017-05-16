@@ -98,14 +98,22 @@ export default class ChromecastPlayback extends Playback {
         this.isBuffering = false
         this.trigger(Events.PLAYBACK_BUFFERFULL, this.name)
       }
-      this.trigger(Events.PLAYBACK_PLAY, this.name)
+      if (this.prevState !== this.currentMedia.playerState) {
+        this.trigger(Events.PLAYBACK_PLAY, this.name)
+      }
     } else if (this.currentMedia.playerState === 'IDLE') {
       if (this.isBuffering) {
         this.isBuffering = false
         this.trigger(Events.PLAYBACK_BUFFERFULL, this.name)
       }
       this.trigger(Events.PLAYBACK_ENDED, this.name)
+    } else if (this.currentMedia.playerState === 'PAUSED') {
+      if (this.prevState !== this.currentMedia.playerState) {
+        this.trigger(Events.PLAYBACK_PAUSE, this.name)
+      }
     }
+
+    this.prevState = this.currentMedia.playerState
   }
 
   updateMediaControl() {
