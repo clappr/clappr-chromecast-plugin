@@ -1,10 +1,10 @@
 (function webpackUniversalModuleDefinition(root, factory) {
 	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory(require("Clappr"));
+		module.exports = factory(require("clappr"));
 	else if(typeof define === 'function' && define.amd)
-		define(["Clappr"], factory);
+		define(["clappr"], factory);
 	else if(typeof exports === 'object')
-		exports["ChromecastPlugin"] = factory(require("Clappr"));
+		exports["ChromecastPlugin"] = factory(require("clappr"));
 	else
 		root["ChromecastPlugin"] = factory(root["Clappr"]);
 })(this, function(__WEBPACK_EXTERNAL_MODULE_1__) {
@@ -52,7 +52,7 @@ return /******/ (function(modules) { // webpackBootstrap
 /************************************************************************/
 /******/ ([
 /* 0 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
@@ -70,7 +70,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _Clappr = __webpack_require__(1);
+	var _clappr = __webpack_require__(1);
 
 	var _chromecast_playback = __webpack_require__(2);
 
@@ -131,7 +131,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  _createClass(ChromecastPlugin, [{
 	    key: 'version',
 	    get: function get() {
-	      return ("0.0.5");
+	      return ("0.0.6");
 	    }
 	  }, {
 	    key: 'name',
@@ -180,7 +180,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'version',
 	    get: function get() {
-	      return ("0.0.5");
+	      return ("0.0.6");
 	    }
 	  }]);
 
@@ -188,7 +188,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    _classCallCheck(this, ChromecastPlugin);
 
 	    _get(Object.getPrototypeOf(ChromecastPlugin.prototype), 'constructor', this).call(this, core);
-	    if (_Clappr.Browser.isChrome) {
+
+	    this.bootTryDelay = this.options.bootTryDelay || 500; // Default is 500 milliseconds between each attempt
+	    this.bootMaxTryCount = this.options.bootMaxTryCount || 6; // Default is 6 attempts (3 seconds)
+	    this.bootTryCount = 0;
+
+	    if (_clappr.Browser.isChrome) {
 	      this.appId = this.options.appId || DEFAULT_CLAPPR_APP_ID;
 	      this.deviceState = DEVICE_STATE.IDLE;
 	      this.embedScript();
@@ -201,12 +206,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'bindEvents',
 	    value: function bindEvents() {
 	      this.container = this.container || this.core.getCurrentContainer();
-	      this.listenTo(this.core.mediaControl, _Clappr.Events.MEDIACONTROL_RENDERED, this.render);
-	      this.listenTo(this.core.mediaControl, _Clappr.Events.MEDIACONTROL_CONTAINERCHANGED, this.containerChanged);
+	      this.listenTo(this.core.mediaControl, _clappr.Events.MEDIACONTROL_RENDERED, this.render);
+	      this.listenTo(this.core.mediaControl, _clappr.Events.MEDIACONTROL_CONTAINERCHANGED, this.containerChanged);
 	      if (this.container) {
-	        this.listenTo(this.container, _Clappr.Events.CONTAINER_TIMEUPDATE, this.containerTimeUpdate);
-	        this.listenTo(this.container, _Clappr.Events.CONTAINER_PLAY, this.containerPlay);
-	        this.listenTo(this.container, _Clappr.Events.CONTAINER_ENDED, this.sessionStopped);
+	        this.listenTo(this.container, _clappr.Events.CONTAINER_TIMEUPDATE, this.containerTimeUpdate);
+	        this.listenTo(this.container, _clappr.Events.CONTAINER_PLAY, this.containerPlay);
+	        this.listenTo(this.container, _clappr.Events.CONTAINER_ENDED, this.sessionStopped);
 	      }
 	    }
 	  }, {
@@ -221,7 +226,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function embedScript() {
 	      var _this = this;
 
-	      if (!window.chrome.cast || !window.chrome.cast.isAvailable) {
+	      if (!window.chrome || !window.chrome.cast || !window.chrome.cast.isAvailable) {
 	        var script = document.createElement('script');
 	        script.setAttribute('type', 'text/javascript');
 	        script.setAttribute('async', 'async');
@@ -239,19 +244,37 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function bootstrapCastApi() {
 	      var _this2 = this;
 
-	      if (!window.chrome.cast || !window.chrome.cast.isAvailable) {
-	        window['__onGCastApiAvailable'] = function (loaded, errorInfo) {
-	          if (loaded) {
-	            _this2.appId = _this2.appId || DEFAULT_CLAPPR_APP_ID;
-	            _this2.initializeCastApi();
-	          } else {
-	            _Clappr.Log.warn('GCastApi error', errorInfo);
-	            _this2.disable();
-	          }
-	        };
+	      this.bootTryCount++;
+
+	      if (this.bootTryCount > this.bootMaxTryCount) {
+	        this.bootTryCount = 0;
+	        _clappr.Log.warn('GCastApi bootstrap timeout');
+	        this.disable();
+	        return;
+	      }
+
+	      // The "chrome" property may not be available immediately on some iOS devices
+	      if (window.chrome) {
+	        this.bootTryCount = 0;
+
+	        if (window.chrome.cast && window.chrome.cast.isAvailable) {
+	          this.appId = this.appId || DEFAULT_CLAPPR_APP_ID;
+	          this.initializeCastApi();
+	        } else {
+	          window['__onGCastApiAvailable'] = function (loaded, errorInfo) {
+	            if (loaded) {
+	              _this2.appId = _this2.appId || DEFAULT_CLAPPR_APP_ID;
+	              _this2.initializeCastApi();
+	            } else {
+	              _clappr.Log.warn('GCastApi error', errorInfo);
+	              _this2.disable();
+	            }
+	          };
+	        }
 	      } else {
-	        this.appId = this.appId || DEFAULT_CLAPPR_APP_ID;
-	        this.initializeCastApi();
+	        setTimeout(function () {
+	          _this2.bootstrapCastApi();
+	        }, this.bootTryDelay);
 	      }
 	    }
 	  }, {
@@ -267,22 +290,22 @@ return /******/ (function(modules) { // webpackBootstrap
 	        return _this3.receiverListener(e);
 	      }, autoJoinPolicy);
 	      chrome.cast.initialize(apiConfig, function () {
-	        return _Clappr.Log.debug(_this3.name, 'init success');
+	        return _clappr.Log.debug(_this3.name, 'init success');
 	      }, function () {
-	        return _Clappr.Log.warn(_this3.name, 'init error');
+	        return _clappr.Log.warn(_this3.name, 'init error');
 	      });
 	    }
 	  }, {
 	    key: 'sessionListener',
 	    value: function sessionListener(session) {
-	      _Clappr.Log.debug(this.name, 'new session id:' + session.sessionId);
+	      _clappr.Log.debug(this.name, 'new session id:' + session.sessionId);
 	      this.newSession(session);
 	    }
 	  }, {
 	    key: 'sessionUpdateListener',
 	    value: function sessionUpdateListener() {
 	      if (this.session) {
-	        _Clappr.Log.debug(this.name, this.session.status);
+	        _clappr.Log.debug(this.name, this.session.status);
 	        if (this.session.status === chrome.cast.SessionStatus.STOPPED) {
 	          this.sessionStopped();
 	          this.session = null;
@@ -293,10 +316,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'receiverListener',
 	    value: function receiverListener(e) {
 	      if (e === chrome.cast.ReceiverAvailability.AVAILABLE) {
-	        _Clappr.Log.debug(this.name, 'receiver found');
+	        _clappr.Log.debug(this.name, 'receiver found');
 	        this.show();
 	      } else {
-	        _Clappr.Log.debug(this.name, 'receiver list empty');
+	        _clappr.Log.debug(this.name, 'receiver list empty');
 	        this.hide();
 	      }
 	    }
@@ -306,13 +329,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this.renderConnected();
 	      clearInterval(this.connectAnimInterval);
 	      this.core.mediaControl.resetKeepVisible();
-	      _Clappr.Log.debug(this.name, 'launch success - session: ' + session.sessionId);
+	      _clappr.Log.debug(this.name, 'launch success - session: ' + session.sessionId);
 	      this.newSession(session);
 	    }
 	  }, {
 	    key: 'launchError',
 	    value: function launchError(e) {
-	      _Clappr.Log.debug(this.name, 'error on launch', e);
+	      _clappr.Log.debug(this.name, 'error on launch', e);
 	      this.renderDisconnected();
 	      clearInterval(this.connectAnimInterval);
 	      this.core.mediaControl.resetKeepVisible();
@@ -321,7 +344,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'loadMediaSuccess',
 	    value: function loadMediaSuccess(how, mediaSession) {
-	      _Clappr.Log.debug(this.name, 'new media session', mediaSession, '(', how, ')');
+	      _clappr.Log.debug(this.name, 'new media session', mediaSession, '(', how, ')');
 
 	      this.originalPlayback = this.core.getCurrentPlayback();
 
@@ -349,7 +372,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'loadMediaError',
 	    value: function loadMediaError(e) {
-	      _Clappr.Log.warn(this.name, 'media error', e);
+	      _clappr.Log.warn(this.name, 'media error', e);
 	    }
 	  }, {
 	    key: 'newSession',
@@ -385,7 +408,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      if (this.playbackProxy) {
 	        if (this.playbackProxy.isPlaying() || playerState === 'PAUSED') {
-	          container.once(_Clappr.Events.CONTAINER_READY, function () {
+	          container.once(_clappr.Events.CONTAINER_READY, function () {
 	            container.play();
 	            container.playback.seek(100 * time / container.getDuration());
 	          });
@@ -400,7 +423,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      this.container.pause();
 	      var src = this.container.options.src;
-	      _Clappr.Log.debug(this.name, 'loading... ' + src);
+	      _clappr.Log.debug(this.name, 'loading... ' + src);
 	      var mediaInfo = this.createMediaInfo(src);
 	      var request = new chrome.cast.media.LoadRequest(mediaInfo);
 	      request.autoplay = true;
@@ -513,8 +536,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'containerPlay',
 	    value: function containerPlay() {
-	      if (this.session && (!this.mediaSession || this.mediaSession.playerStatus === 'IDLE')) {
-	        _Clappr.Log.debug(this.name, 'load media');
+	      if (this.session && (!this.mediaSession || this.mediaSession.playerState === 'IDLE' || this.mediaSession.playerState === 'PAUSED')) {
+	        _clappr.Log.debug(this.name, 'load media');
 	        this.currentTime = this.currentTime || 0;
 	        this.loadMedia();
 	      }
@@ -534,8 +557,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function render() {
 	      this.session ? this.renderConnected() : this.renderDisconnected();
 	      this.core.mediaControl.$el.find('.media-control-right-panel[data-media-control]').append(this.$el);
-	      var style = _Clappr.Styler.getStyleFor(_publicStyleScss2['default'], { baseUrl: this.core.options.baseUrl });
-	      this.core.$el.append(style);
+	      this.$style && this.$style.remove();
+	      this.$style = _clappr.Styler.getStyleFor(_publicStyleScss2['default'], { baseUrl: this.core.options.baseUrl });
+	      this.core.$el.append(this.$style);
 	      return this;
 	    }
 	  }], [{
@@ -551,20 +575,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }]);
 
 	  return ChromecastPlugin;
-	})(_Clappr.UICorePlugin);
+	})(_clappr.UICorePlugin);
 
 	exports['default'] = ChromecastPlugin;
 	module.exports = exports['default'];
 
-/***/ },
+/***/ }),
 /* 1 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	module.exports = __WEBPACK_EXTERNAL_MODULE_1__;
 
-/***/ },
+/***/ }),
 /* 2 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
@@ -582,7 +606,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _Clappr = __webpack_require__(1);
+	var _clappr = __webpack_require__(1);
 
 	var _publicChromecastHtml = __webpack_require__(3);
 
@@ -601,7 +625,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'template',
 	    get: function get() {
-	      return (0, _Clappr.template)(_publicChromecastHtml2['default']);
+	      return (0, _clappr.template)(_publicChromecastHtml2['default']);
 	    }
 	  }, {
 	    key: 'attributes',
@@ -621,7 +645,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    _classCallCheck(this, ChromecastPlayback);
 
 	    _get(Object.getPrototypeOf(ChromecastPlayback.prototype), 'constructor', this).call(this, options);
-	    this.options = options;
 	    this.src = options.src;
 	    this.currentMedia = options.currentMedia;
 	    this.mediaControl = options.mediaControl;
@@ -663,7 +686,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'stop',
 	    value: function stop() {
 	      this.stopTimer();
-	      this.currentMedia.stop();
+	      this.currentMedia.pause(); // FIXME: properly handle media stop
 	    }
 	  }, {
 	    key: 'seek',
@@ -676,7 +699,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      this.currentMedia.seek(request, function () {
 	        return _this2.startTimer();
 	      }, function () {
-	        return _Clappr.Log.warn('seek failed');
+	        return _clappr.Log.warn('seek failed');
 	      });
 	    }
 	  }, {
@@ -715,7 +738,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getPlaybackType',
 	    value: function getPlaybackType() {
-	      return this.currentMedia.streamType == 'LIVE' ? _Clappr.Playback.LIVE : _Clappr.Playback.VOD;
+	      return this.currentMedia.streamType == 'LIVE' ? _clappr.Playback.LIVE : _clappr.Playback.VOD;
 	    }
 	  }, {
 	    key: 'onMediaStatusUpdate',
@@ -727,27 +750,35 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      if (this.currentMedia.playerState === 'BUFFERING') {
 	        this.isBuffering = true;
-	        this.trigger(_Clappr.Events.PLAYBACK_BUFFERING, this.name);
+	        this.trigger(_clappr.Events.PLAYBACK_BUFFERING, this.name);
 	      } else if (this.currentMedia.playerState === 'PLAYING') {
 	        if (this.isBuffering) {
 	          this.isBuffering = false;
-	          this.trigger(_Clappr.Events.PLAYBACK_BUFFERFULL, this.name);
+	          this.trigger(_clappr.Events.PLAYBACK_BUFFERFULL, this.name);
 	        }
-	        this.trigger(_Clappr.Events.PLAYBACK_PLAY, this.name);
+	        if (this.prevState !== this.currentMedia.playerState) {
+	          this.trigger(_clappr.Events.PLAYBACK_PLAY, this.name);
+	        }
 	      } else if (this.currentMedia.playerState === 'IDLE') {
 	        if (this.isBuffering) {
 	          this.isBuffering = false;
-	          this.trigger(_Clappr.Events.PLAYBACK_BUFFERFULL, this.name);
+	          this.trigger(_clappr.Events.PLAYBACK_BUFFERFULL, this.name);
 	        }
-	        this.trigger(_Clappr.Events.PLAYBACK_ENDED, this.name);
+	        this.trigger(_clappr.Events.PLAYBACK_ENDED, this.name);
+	      } else if (this.currentMedia.playerState === 'PAUSED') {
+	        if (this.prevState !== this.currentMedia.playerState) {
+	          this.trigger(_clappr.Events.PLAYBACK_PAUSE, this.name);
+	        }
 	      }
+
+	      this.prevState = this.currentMedia.playerState;
 	    }
 	  }, {
 	    key: 'updateMediaControl',
 	    value: function updateMediaControl() {
 	      var position = this.currentMedia.getEstimatedTime();
 	      var duration = this.currentMedia.media.duration;
-	      this.trigger(_Clappr.Events.PLAYBACK_TIMEUPDATE, { current: position, total: duration }, this.name);
+	      this.trigger(_clappr.Events.PLAYBACK_TIMEUPDATE, { current: position, total: duration }, this.name);
 	    }
 	  }, {
 	    key: 'show',
@@ -762,20 +793,20 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }]);
 
 	  return ChromecastPlayback;
-	})(_Clappr.Playback);
+	})(_clappr.Playback);
 
 	exports['default'] = ChromecastPlayback;
 	module.exports = exports['default'];
 
-/***/ },
+/***/ }),
 /* 3 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	module.exports = "<div class=chromecast-playback-background></div><div class=chromecast-playback-overlay></div>";
 
-/***/ },
+/***/ }),
 /* 4 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	exports = module.exports = __webpack_require__(5)();
 	// imports
@@ -787,9 +818,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	// exports
 
 
-/***/ },
+/***/ }),
 /* 5 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/*
 		MIT License http://www.opensource.org/licenses/mit-license.php
@@ -843,9 +874,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	};
 
 
-/***/ },
+/***/ }),
 /* 6 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * lodash 3.2.0 (Custom Build) <https://lodash.com/>
@@ -929,9 +960,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = assign;
 
 
-/***/ },
+/***/ }),
 /* 7 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * lodash 3.2.0 (Custom Build) <https://lodash.com/>
@@ -962,9 +993,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = baseAssign;
 
 
-/***/ },
+/***/ }),
 /* 8 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * lodash 3.0.1 (Custom Build) <https://lodash.com/>
@@ -1000,9 +1031,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = baseCopy;
 
 
-/***/ },
+/***/ }),
 /* 9 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * lodash 3.1.2 (Custom Build) <https://lodash.com/>
@@ -1242,9 +1273,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = keys;
 
 
-/***/ },
+/***/ }),
 /* 10 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * lodash 3.9.1 (Custom Build) <https://lodash.com/>
@@ -1385,102 +1416,53 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = getNative;
 
 
-/***/ },
+/***/ }),
 /* 11 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
-	 * lodash 3.0.4 (Custom Build) <https://lodash.com/>
-	 * Build: `lodash modern modularize exports="npm" -o ./`
-	 * Copyright 2012-2015 The Dojo Foundation <http://dojofoundation.org/>
+	 * lodash (Custom Build) <https://lodash.com/>
+	 * Build: `lodash modularize exports="npm" -o ./`
+	 * Copyright jQuery Foundation and other contributors <https://jquery.org/>
+	 * Released under MIT license <https://lodash.com/license>
 	 * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
-	 * Copyright 2009-2015 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
-	 * Available under MIT license <https://lodash.com/license>
+	 * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
 	 */
 
-	/**
-	 * Checks if `value` is object-like.
-	 *
-	 * @private
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
-	 */
-	function isObjectLike(value) {
-	  return !!value && typeof value == 'object';
-	}
+	/** Used as references for various `Number` constants. */
+	var MAX_SAFE_INTEGER = 9007199254740991;
 
-	/** Used for native method references. */
+	/** `Object#toString` result references. */
+	var argsTag = '[object Arguments]',
+	    funcTag = '[object Function]',
+	    genTag = '[object GeneratorFunction]';
+
+	/** Used for built-in method references. */
 	var objectProto = Object.prototype;
 
 	/** Used to check objects for own properties. */
 	var hasOwnProperty = objectProto.hasOwnProperty;
 
-	/** Native method references. */
+	/**
+	 * Used to resolve the
+	 * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
+	 * of values.
+	 */
+	var objectToString = objectProto.toString;
+
+	/** Built-in value references. */
 	var propertyIsEnumerable = objectProto.propertyIsEnumerable;
 
 	/**
-	 * Used as the [maximum length](http://ecma-international.org/ecma-262/6.0/#sec-number.max_safe_integer)
-	 * of an array-like value.
-	 */
-	var MAX_SAFE_INTEGER = 9007199254740991;
-
-	/**
-	 * The base implementation of `_.property` without support for deep paths.
-	 *
-	 * @private
-	 * @param {string} key The key of the property to get.
-	 * @returns {Function} Returns the new function.
-	 */
-	function baseProperty(key) {
-	  return function(object) {
-	    return object == null ? undefined : object[key];
-	  };
-	}
-
-	/**
-	 * Gets the "length" property value of `object`.
-	 *
-	 * **Note:** This function is used to avoid a [JIT bug](https://bugs.webkit.org/show_bug.cgi?id=142792)
-	 * that affects Safari on at least iOS 8.1-8.3 ARM64.
-	 *
-	 * @private
-	 * @param {Object} object The object to query.
-	 * @returns {*} Returns the "length" value.
-	 */
-	var getLength = baseProperty('length');
-
-	/**
-	 * Checks if `value` is array-like.
-	 *
-	 * @private
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
-	 */
-	function isArrayLike(value) {
-	  return value != null && isLength(getLength(value));
-	}
-
-	/**
-	 * Checks if `value` is a valid array-like length.
-	 *
-	 * **Note:** This function is based on [`ToLength`](http://ecma-international.org/ecma-262/6.0/#sec-tolength).
-	 *
-	 * @private
-	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
-	 */
-	function isLength(value) {
-	  return typeof value == 'number' && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
-	}
-
-	/**
-	 * Checks if `value` is classified as an `arguments` object.
+	 * Checks if `value` is likely an `arguments` object.
 	 *
 	 * @static
 	 * @memberOf _
+	 * @since 0.1.0
 	 * @category Lang
 	 * @param {*} value The value to check.
-	 * @returns {boolean} Returns `true` if `value` is correctly classified, else `false`.
+	 * @returns {boolean} Returns `true` if `value` is an `arguments` object,
+	 *  else `false`.
 	 * @example
 	 *
 	 * _.isArguments(function() { return arguments; }());
@@ -1490,16 +1472,188 @@ return /******/ (function(modules) { // webpackBootstrap
 	 * // => false
 	 */
 	function isArguments(value) {
-	  return isObjectLike(value) && isArrayLike(value) &&
-	    hasOwnProperty.call(value, 'callee') && !propertyIsEnumerable.call(value, 'callee');
+	  // Safari 8.1 makes `arguments.callee` enumerable in strict mode.
+	  return isArrayLikeObject(value) && hasOwnProperty.call(value, 'callee') &&
+	    (!propertyIsEnumerable.call(value, 'callee') || objectToString.call(value) == argsTag);
+	}
+
+	/**
+	 * Checks if `value` is array-like. A value is considered array-like if it's
+	 * not a function and has a `value.length` that's an integer greater than or
+	 * equal to `0` and less than or equal to `Number.MAX_SAFE_INTEGER`.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.0.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is array-like, else `false`.
+	 * @example
+	 *
+	 * _.isArrayLike([1, 2, 3]);
+	 * // => true
+	 *
+	 * _.isArrayLike(document.body.children);
+	 * // => true
+	 *
+	 * _.isArrayLike('abc');
+	 * // => true
+	 *
+	 * _.isArrayLike(_.noop);
+	 * // => false
+	 */
+	function isArrayLike(value) {
+	  return value != null && isLength(value.length) && !isFunction(value);
+	}
+
+	/**
+	 * This method is like `_.isArrayLike` except that it also checks if `value`
+	 * is an object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.0.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is an array-like object,
+	 *  else `false`.
+	 * @example
+	 *
+	 * _.isArrayLikeObject([1, 2, 3]);
+	 * // => true
+	 *
+	 * _.isArrayLikeObject(document.body.children);
+	 * // => true
+	 *
+	 * _.isArrayLikeObject('abc');
+	 * // => false
+	 *
+	 * _.isArrayLikeObject(_.noop);
+	 * // => false
+	 */
+	function isArrayLikeObject(value) {
+	  return isObjectLike(value) && isArrayLike(value);
+	}
+
+	/**
+	 * Checks if `value` is classified as a `Function` object.
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 0.1.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a function, else `false`.
+	 * @example
+	 *
+	 * _.isFunction(_);
+	 * // => true
+	 *
+	 * _.isFunction(/abc/);
+	 * // => false
+	 */
+	function isFunction(value) {
+	  // The use of `Object#toString` avoids issues with the `typeof` operator
+	  // in Safari 8-9 which returns 'object' for typed array and other constructors.
+	  var tag = isObject(value) ? objectToString.call(value) : '';
+	  return tag == funcTag || tag == genTag;
+	}
+
+	/**
+	 * Checks if `value` is a valid array-like length.
+	 *
+	 * **Note:** This method is loosely based on
+	 * [`ToLength`](http://ecma-international.org/ecma-262/7.0/#sec-tolength).
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.0.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is a valid length, else `false`.
+	 * @example
+	 *
+	 * _.isLength(3);
+	 * // => true
+	 *
+	 * _.isLength(Number.MIN_VALUE);
+	 * // => false
+	 *
+	 * _.isLength(Infinity);
+	 * // => false
+	 *
+	 * _.isLength('3');
+	 * // => false
+	 */
+	function isLength(value) {
+	  return typeof value == 'number' &&
+	    value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER;
+	}
+
+	/**
+	 * Checks if `value` is the
+	 * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
+	 * of `Object`. (e.g. arrays, functions, objects, regexes, `new Number(0)`, and `new String('')`)
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 0.1.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is an object, else `false`.
+	 * @example
+	 *
+	 * _.isObject({});
+	 * // => true
+	 *
+	 * _.isObject([1, 2, 3]);
+	 * // => true
+	 *
+	 * _.isObject(_.noop);
+	 * // => true
+	 *
+	 * _.isObject(null);
+	 * // => false
+	 */
+	function isObject(value) {
+	  var type = typeof value;
+	  return !!value && (type == 'object' || type == 'function');
+	}
+
+	/**
+	 * Checks if `value` is object-like. A value is object-like if it's not `null`
+	 * and has a `typeof` result of "object".
+	 *
+	 * @static
+	 * @memberOf _
+	 * @since 4.0.0
+	 * @category Lang
+	 * @param {*} value The value to check.
+	 * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
+	 * @example
+	 *
+	 * _.isObjectLike({});
+	 * // => true
+	 *
+	 * _.isObjectLike([1, 2, 3]);
+	 * // => true
+	 *
+	 * _.isObjectLike(_.noop);
+	 * // => false
+	 *
+	 * _.isObjectLike(null);
+	 * // => false
+	 */
+	function isObjectLike(value) {
+	  return !!value && typeof value == 'object';
 	}
 
 	module.exports = isArguments;
 
 
-/***/ },
+/***/ }),
 /* 12 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * lodash 3.0.4 (Custom Build) <https://lodash.com/>
@@ -1683,9 +1837,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = isArray;
 
 
-/***/ },
+/***/ }),
 /* 13 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, __webpack_require__) {
 
 	/**
 	 * lodash 3.1.1 (Custom Build) <https://lodash.com/>
@@ -1741,9 +1895,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = createAssigner;
 
 
-/***/ },
+/***/ }),
 /* 14 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * lodash 3.0.1 (Custom Build) <https://lodash.com/>
@@ -1812,9 +1966,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = bindCallback;
 
 
-/***/ },
+/***/ }),
 /* 15 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * lodash 3.0.9 (Custom Build) <https://lodash.com/>
@@ -1950,9 +2104,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = isIterateeCall;
 
 
-/***/ },
+/***/ }),
 /* 16 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	/**
 	 * lodash 3.6.1 (Custom Build) <https://lodash.com/>
@@ -2023,37 +2177,37 @@ return /******/ (function(modules) { // webpackBootstrap
 	module.exports = restParam;
 
 
-/***/ },
+/***/ }),
 /* 17 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	module.exports = "<svg xmlns=\"http://www.w3.org/2000/svg\"><g id=\"Page-1\" fill=\"none\" fill-rule=\"evenodd\"><g id=\"ic_cast_black_24dp\"><g id=\"ic_remove_circle_white_24dp\"><path d=\"M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm0-4v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z\" id=\"cast\" fill=\"#000\"></path><path id=\"bounds\" d=\"M0 0h24v24H0z\"></path></g></g></g></svg>"
 
-/***/ },
+/***/ }),
 /* 18 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	module.exports = "<svg xmlns=\"http://www.w3.org/2000/svg\"><g id=\"Page-1\" fill=\"none\" fill-rule=\"evenodd\"><g id=\"ic_cast0_black_24dp\"><g id=\"ic_remove_circle_white_24dp\"><path d=\"M1 18v3h3c0-1.66-1.34-3-3-3z\" id=\"Path\" fill=\"#000\"></path><path d=\"M1 14v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7z\" id=\"Path\" opacity=\".3\" fill=\"#000\"></path><path d=\"M1 10v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11z\" id=\"Path\" opacity=\".3\" fill=\"#000\"></path><path d=\"M21 3H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z\" id=\"Path\" fill=\"#000\"></path><path id=\"bounds\" d=\"M0 0h24v24H0z\"></path></g></g></g></svg>"
 
-/***/ },
+/***/ }),
 /* 19 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	module.exports = "<svg xmlns=\"http://www.w3.org/2000/svg\"><g id=\"Page-1\" fill=\"none\" fill-rule=\"evenodd\"><g id=\"ic_cast1_black_24dp\"><g id=\"ic_remove_circle_white_24dp\"><path d=\"M1 18v3h3c0-1.66-1.34-3-3-3z\" id=\"Path\" opacity=\".3\" fill=\"#000\"></path><path d=\"M1 14v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7z\" id=\"Path\" fill=\"#000\"></path><path d=\"M1 10v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11z\" id=\"Path\" opacity=\".3\" fill=\"#000\"></path><path d=\"M21 3H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z\" id=\"cast\" fill=\"#000\"></path><path id=\"bounds\" d=\"M0 0h24v24H0z\"></path></g></g></g></svg>"
 
-/***/ },
+/***/ }),
 /* 20 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	module.exports = "<svg xmlns=\"http://www.w3.org/2000/svg\"><g id=\"Page-1\" fill=\"none\" fill-rule=\"evenodd\"><g id=\"ic_cast2_black_24dp\"><g id=\"ic_remove_circle_white_24dp\"><path d=\"M1 18v3h3c0-1.66-1.34-3-3-3zM1 14v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7z\" id=\"Path\" opacity=\".3\" fill=\"#000\"></path><path d=\"M1 10v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11z\" id=\"Path\" fill=\"#000\"></path><path d=\"M21 3H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z\" id=\"cast\" fill=\"#000\"></path><path id=\"bounds\" d=\"M0 0h24v24H0z\"></path></g></g></g></svg>"
 
-/***/ },
+/***/ }),
 /* 21 */
-/***/ function(module, exports) {
+/***/ (function(module, exports) {
 
 	module.exports = "<svg xmlns=\"http://www.w3.org/2000/svg\"><g id=\"Page-1\" fill=\"none\" fill-rule=\"evenodd\"><g id=\"ic_cast_connected_black_24dp\"><g id=\"ic_remove_circle_white_24dp\"><path d=\"M1 18v3h3c0-1.66-1.34-3-3-3zm0-4v2c2.76 0 5 2.24 5 5h2c0-3.87-3.13-7-7-7zm18-7H5v1.63c3.96 1.28 7.09 4.41 8.37 8.37H19V7zM1 10v2c4.97 0 9 4.03 9 9h2c0-6.08-4.93-11-11-11zm20-7H3c-1.1 0-2 .9-2 2v3h2V5h18v14h-7v2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z\" id=\"cast-on\" fill=\"#000\"></path><path id=\"bounds\" d=\"M0 0h24v24H0z\"></path></g></g></g></svg>"
 
-/***/ }
+/***/ })
 /******/ ])
 });
 ;
