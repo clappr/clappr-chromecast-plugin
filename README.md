@@ -9,8 +9,8 @@ Please notice it's still not production ready, as it lacks a way to select track
 ```html
 <html>
   <head>
-    <script src="https://cdn.jsdelivr.net/clappr/latest/clappr.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/clappr.chromecast-plugin/latest/clappr-chromecast-plugin.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clappr@latest/dist/clappr.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/clappr-chromecast-plugin@latest/dist/clappr-chromecast-plugin.min.js"></script>
   </head>
 
   <body>
