@@ -68,9 +68,9 @@ export default class ChromecastPlugin extends UICorePlugin {
   }
 
   bindEvents() {
-    this.container = this.container || this.core.getCurrentContainer()
+    this.container = this.container || this.core.activeContainer
     this.listenTo(this.core.mediaControl, Events.MEDIACONTROL_RENDERED, this.render)
-    this.listenTo(this.core.mediaControl, Events.MEDIACONTROL_CONTAINERCHANGED, this.containerChanged)
+    this.listenTo(this.core, Events.CORE_ACTIVE_CONTAINER_CHANGED, this.containerChanged)
     if (this.container) {
       this.listenTo(this.container, Events.CONTAINER_TIMEUPDATE, this.containerTimeUpdate)
       this.listenTo(this.container, Events.CONTAINER_PLAY, this.containerPlay)
@@ -182,7 +182,7 @@ export default class ChromecastPlugin extends UICorePlugin {
   loadMediaSuccess(how, mediaSession) {
     Log.debug(this.name, 'new media session', mediaSession, '(', how , ')')
 
-    this.originalPlayback = this.core.getCurrentPlayback()
+    this.originalPlayback = this.core.activePlayback
 
     let options = assign({}, this.originalPlayback.options, {
       currentMedia: mediaSession,
@@ -198,7 +198,7 @@ export default class ChromecastPlugin extends UICorePlugin {
 
     this.originalPlayback.$el.remove()
 
-    let container = this.core.getCurrentContainer()
+    let container = this.core.activeContainer
     container.$el.append(this.playbackProxy.$el)
     container.stopListening()
     container.playback = this.playbackProxy
@@ -233,7 +233,7 @@ export default class ChromecastPlugin extends UICorePlugin {
 
     this.core.load(this.src || this.core.options.sources)
 
-    let container = this.core.getCurrentContainer()
+    let container = this.core.activeContainer
 
     if (this.playbackProxy) {
       if (this.playbackProxy.isPlaying() || playerState === 'PAUSED') {
@@ -325,7 +325,7 @@ export default class ChromecastPlugin extends UICorePlugin {
   }
 
   containerChanged() {
-    this.container = this.core.getCurrentContainer()
+    this.container = this.core.activeContainer
     this.stopListening()
     this.bindEvents()
     this.currentTime = 0
