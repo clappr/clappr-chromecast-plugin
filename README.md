@@ -27,6 +27,9 @@ Please notice it's still not production ready, as it lacks a way to select track
             type: ChromecastPlugin.Movie,
             title: 'Awesome Hot Air Balloon Slackline',
             subtitle: 'You won\'t get much closer to Skylining than this!'
+          },
+          customData: {
+            licenseURL: 'http://widevine/yourLicenseServer'
           }
         }
       });
@@ -54,6 +57,7 @@ The plugin parameters are passed through the embed parameters object under the `
   - seriesTitle: TV series title (TV episode only)
   - season: TV episode season (TV episode only)
   - episode: TV episode number (TV episode only)
+- customData: an object that can be used to pass additional parameters to a custom receiver (optional)
 
 
 ## Development
