@@ -131,7 +131,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  _createClass(ChromecastPlugin, [{
 	    key: 'version',
 	    get: function get() {
-	      return ("0.0.6");
+	      return ("0.1.0");
 	    }
 	  }, {
 	    key: 'name',
@@ -162,6 +162,11 @@ return /******/ (function(modules) { // webpackBootstrap
 	    get: function get() {
 	      return this.core.options.chromecast || (this.core.options.chromecast = {});
 	    }
+	  }, {
+	    key: 'container',
+	    get: function get() {
+	      return this.core.activeContainer;
+	    }
 	  }], [{
 	    key: 'Movie',
 	    get: function get() {
@@ -180,7 +185,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'version',
 	    get: function get() {
-	      return ("0.0.6");
+	      return ("0.1.0");
 	    }
 	  }]);
 
@@ -205,9 +210,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	  _createClass(ChromecastPlugin, [{
 	    key: 'bindEvents',
 	    value: function bindEvents() {
-	      this.container = this.container || this.core.getCurrentContainer();
 	      this.listenTo(this.core.mediaControl, _clappr.Events.MEDIACONTROL_RENDERED, this.render);
-	      this.listenTo(this.core.mediaControl, _clappr.Events.MEDIACONTROL_CONTAINERCHANGED, this.containerChanged);
+	      this.listenTo(this.core, _clappr.Events.CORE_ACTIVE_CONTAINER_CHANGED, this.containerChanged);
 	      if (this.container) {
 	        this.listenTo(this.container, _clappr.Events.CONTAINER_TIMEUPDATE, this.containerTimeUpdate);
 	        this.listenTo(this.container, _clappr.Events.CONTAINER_PLAY, this.containerPlay);
@@ -346,7 +350,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function loadMediaSuccess(how, mediaSession) {
 	      _clappr.Log.debug(this.name, 'new media session', mediaSession, '(', how, ')');
 
-	      this.originalPlayback = this.core.getCurrentPlayback();
+	      this.originalPlayback = this.core.activePlayback;
 
 	      var options = (0, _lodashAssign2['default'])({}, this.originalPlayback.options, {
 	        currentMedia: mediaSession,
@@ -362,7 +366,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      this.originalPlayback.$el.remove();
 
-	      var container = this.core.getCurrentContainer();
+	      var container = this.core.activeContainer;
 	      container.$el.append(this.playbackProxy.$el);
 	      container.stopListening();
 	      container.playback = this.playbackProxy;
@@ -404,7 +408,7 @@ return /******/ (function(modules) { // webpackBootstrap
 
 	      this.core.load(this.src || this.core.options.sources);
 
-	      var container = this.core.getCurrentContainer();
+	      var container = this.core.activeContainer;
 
 	      if (this.playbackProxy) {
 	        if (this.playbackProxy.isPlaying() || playerState === 'PAUSED') {
@@ -440,6 +444,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var mimeType = ChromecastPlugin.mimeTypeFor(src);
 	      var mediaInfo = new chrome.cast.media.MediaInfo(src);
 	      mediaInfo.contentType = this.options.contentType || mimeType;
+	      mediaInfo.customData = this.options.customData;
 	      var metadata = this.createMediaMetadata();
 	      mediaInfo.metadata = metadata;
 	      return mediaInfo;
@@ -523,7 +528,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'containerChanged',
 	    value: function containerChanged() {
-	      this.container = this.core.getCurrentContainer();
 	      this.stopListening();
 	      this.bindEvents();
 	      this.currentTime = 0;
