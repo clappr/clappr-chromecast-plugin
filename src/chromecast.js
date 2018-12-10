@@ -50,6 +50,7 @@ export default class ChromecastPlugin extends UICorePlugin {
     }
   }
   get options() { return this.core.options.chromecast || (this.core.options.chromecast = {}) }
+  get container() { return this.core.activeContainer }
 
   constructor(core) {
     super(core)
@@ -68,7 +69,6 @@ export default class ChromecastPlugin extends UICorePlugin {
   }
 
   bindEvents() {
-    this.container = this.container || this.core.activeContainer
     this.listenTo(this.core.mediaControl, Events.MEDIACONTROL_RENDERED, this.render)
     this.listenTo(this.core, Events.CORE_ACTIVE_CONTAINER_CHANGED, this.containerChanged)
     if (this.container) {
@@ -326,7 +326,6 @@ export default class ChromecastPlugin extends UICorePlugin {
   }
 
   containerChanged() {
-    this.container = this.core.activeContainer
     this.stopListening()
     this.bindEvents()
     this.currentTime = 0
