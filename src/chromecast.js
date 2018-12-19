@@ -41,7 +41,8 @@ export default class ChromecastPlugin extends UICorePlugin {
   get tagName() { return 'button' }
   get attributes() {
     return {
-      'class' : 'chromecast-button'
+      'class' : 'chromecast-button',
+      'type'  : 'button',
     }
   }
   get events() {

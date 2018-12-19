@@ -147,7 +147,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'attributes',
 	    get: function get() {
 	      return {
-	        'class': 'chromecast-button'
+	        'class': 'chromecast-button',
+	        'type': 'button'
 	      };
 	    }
 	  }, {
