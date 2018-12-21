@@ -41,6 +41,9 @@ export default class ChromecastPlayback extends Playback {
   pause() {
     this.stopTimer()
     this.currentMedia.pause()
+    if (this.getPlaybackType() === Playback.LIVE) {
+      this.trigger(Events.PLAYBACK_DVR, true)
+    }
   }
 
   stop() {
@@ -54,6 +57,10 @@ export default class ChromecastPlayback extends Playback {
     request.currentTime = time
     this.currentMedia.seek(request,
       () => this.startTimer(), () => Log.warn('seek failed'))
+    if (this.getPlaybackType() === Playback.LIVE) {
+      // assume live if time within 30 seconds of end of live stream
+      this.trigger(Events.PLAYBACK_DVR, time < this.getDuration() - 30)
+    }
   }
 
   seekPercentage(percentage) {
@@ -81,7 +88,7 @@ export default class ChromecastPlayback extends Playback {
   }
 
   getPlaybackType() {
-    return this.currentMedia.streamType == 'LIVE' ? Playback.LIVE : Playback.VOD
+    return !!this.currentMedia.liveSeekableRange ? Playback.LIVE : Playback.VOD
   }
 
   onMediaStatusUpdate() {
