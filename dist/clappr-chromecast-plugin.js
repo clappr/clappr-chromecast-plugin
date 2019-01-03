@@ -431,9 +431,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var mediaInfo = this.createMediaInfo(src);
 	      var request = new chrome.cast.media.LoadRequest(mediaInfo);
 	      request.autoplay = true;
-	      if (this.currentTime) {
-	        request.currentTime = this.currentTime;
-	      }
+	      request.currentTime = this.currentTime || 0;
 	      this.session.loadMedia(request, function (mediaSession) {
 	        return _this5.loadMediaSuccess('loadMedia', mediaSession);
 	      }, function (e) {
@@ -508,7 +506,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function click() {
 	      var _this6 = this;
 
-	      this.currentTime = this.container.getCurrentTime();
 	      this.container.pause();
 	      chrome.cast.requestSession(function (session) {
 	        return _this6.launchSuccess(session);
@@ -533,6 +530,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function containerChanged() {
 	      this.stopListening();
 	      this.bindEvents();
+	      this.currentTime = 0;
 	    }
 	  }, {
 	    key: 'containerTimeUpdate',
@@ -544,6 +542,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function containerPlay() {
 	      if (this.session && (!this.mediaSession || this.mediaSession.playerState === 'IDLE' || this.mediaSession.playerState === 'PAUSED')) {
 	        _clappr.Log.debug(this.name, 'load media');
+	        this.currentTime = this.currentTime || 0;
 	        this.loadMedia();
 	      }
 	    }
