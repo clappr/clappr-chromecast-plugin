@@ -685,9 +685,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function pause() {
 	      this.stopTimer();
 	      this.currentMedia.pause();
-	      if (this.getPlaybackType() === _clappr.Playback.LIVE) {
-	        this.trigger(_clappr.Events.PLAYBACK_DVR, true);
-	      }
 	    }
 	  }, {
 	    key: 'stop',
@@ -708,10 +705,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }, function () {
 	        return _clappr.Log.warn('seek failed');
 	      });
-	      if (this.getPlaybackType() === _clappr.Playback.LIVE) {
-	        // assume live if time within 30 seconds of end of live stream
-	        this.trigger(_clappr.Events.PLAYBACK_DVR, time < this.getDuration() - 30);
-	      }
 	    }
 	  }, {
 	    key: 'seekPercentage',
@@ -749,7 +742,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getPlaybackType',
 	    value: function getPlaybackType() {
-	      return !!this.currentMedia.liveSeekableRange ? _clappr.Playback.LIVE : _clappr.Playback.VOD;
+	      return this.currentMedia.streamType == 'LIVE' ? _clappr.Playback.LIVE : _clappr.Playback.VOD;
 	    }
 	  }, {
 	    key: 'onMediaStatusUpdate',
