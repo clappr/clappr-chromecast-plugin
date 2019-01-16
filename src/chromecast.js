@@ -187,7 +187,7 @@ export default class ChromecastPlugin extends UICorePlugin {
     let options = assign({}, this.originalPlayback.options, {
       currentMedia: mediaSession,
       mediaControl: this.core.mediaControl,
-      poster: this.core.options.poster,
+      poster: this.options.poster || this.core.options.poster,
       settings: this.originalPlayback.settings
     })
     this.src = this.originalPlayback.src
@@ -287,6 +287,9 @@ export default class ChromecastPlugin extends UICorePlugin {
 
     if (this.options.media.images) {
       metadata.images = this.options.media.images.map((url) => new chrome.cast.Image(url))
+    }
+    if (!metadata.images && this.options.poster) {
+      metadata.images = [new chrome.cast.Image(this.options.poster)]
     }
     if (!metadata.images && this.core.options.poster) {
       metadata.images = [new chrome.cast.Image(this.core.options.poster)]
