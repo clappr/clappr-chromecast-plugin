@@ -232,7 +232,7 @@ export default class ChromecastPlugin extends UICorePlugin {
       this.mediaSession = null
     }
 
-    this.core.$el.removeClass('chromecast-active');
+    this.core.$el.removeClass('chromecast-active')
     this.core.load(this.src || this.core.options.sources)
 
     let container = this.core.activeContainer
