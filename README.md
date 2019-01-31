@@ -57,6 +57,7 @@ The plugin parameters are passed through the embed parameters object under the `
   - seriesTitle: TV series title (TV episode only)
   - season: TV episode season (TV episode only)
   - episode: TV episode number (TV episode only)
+- poster: a URL for an image that should be used as a poster when casting (optional)
 - customData: an object that can be used to pass additional parameters to a custom receiver (optional)
 
 
