@@ -193,6 +193,7 @@ export default class ChromecastPlugin extends UICorePlugin {
     this.src = this.originalPlayback.src
     this.playbackProxy = new ChromecastPlayback(options)
     this.playbackProxy.render()
+    this.core.$el.addClass('chromecast-active')
 
     this.mediaSession = mediaSession
 
@@ -231,6 +232,7 @@ export default class ChromecastPlugin extends UICorePlugin {
       this.mediaSession = null
     }
 
+    this.core.$el.removeClass('chromecast-active')
     this.core.load(this.src || this.core.options.sources)
 
     let container = this.core.activeContainer
