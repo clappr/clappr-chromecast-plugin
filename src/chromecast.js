@@ -256,7 +256,9 @@ export default class ChromecastPlugin extends UICorePlugin {
     let mediaInfo = this.createMediaInfo(src)
     let request = new chrome.cast.media.LoadRequest(mediaInfo)
     request.autoplay = true
-    request.currentTime = this.currentTime || 0
+    if (this.currentTime) {
+      request.currentTime = this.currentTime
+    }
     this.session.loadMedia(request, (mediaSession) => this.loadMediaSuccess('loadMedia', mediaSession), (e) => this.loadMediaError(e))
   }
 
@@ -317,6 +319,7 @@ export default class ChromecastPlugin extends UICorePlugin {
   }
 
   click() {
+    this.currentTime = this.container.getCurrentTime();
     this.container.pause()
     chrome.cast.requestSession((session) => this.launchSuccess(session), (e) => this.launchError(e))
     if (!this.session) {
@@ -334,7 +337,6 @@ export default class ChromecastPlugin extends UICorePlugin {
   containerChanged() {
     this.stopListening()
     this.bindEvents()
-    this.currentTime = 0
   }
 
   containerTimeUpdate(timeProgress) {
@@ -344,7 +346,6 @@ export default class ChromecastPlugin extends UICorePlugin {
   containerPlay() {
     if (this.session && (!this.mediaSession || this.mediaSession.playerState === 'IDLE' || this.mediaSession.playerState === 'PAUSED')) {
       Log.debug(this.name, 'load media')
-      this.currentTime = this.currentTime || 0
       this.loadMedia()
     }
   }
