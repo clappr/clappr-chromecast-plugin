@@ -42,7 +42,7 @@ export default class ChromecastPlugin extends UICorePlugin {
   get attributes() {
     return {
       'class' : 'chromecast-button',
-      'type'  : 'button',
+      'type'  : 'button'
     }
   }
   get events() {
@@ -51,7 +51,16 @@ export default class ChromecastPlugin extends UICorePlugin {
     }
   }
   get options() { return this.core.options.chromecast || (this.core.options.chromecast = {}) }
-  get container() { return this.core.activeContainer }
+  get container() {
+    return this.core.getCurrentContainer
+      ? this.core.getCurrentContainer()
+      : this.core.activeContainer // Clappr 0.3.0 or greater
+  }
+  get playback() {
+    return this.core.getCurrentPlayback
+      ? this.core.getCurrentPlayback()
+      : this.core.activePlayback // Clappr 0.3.0 or greater
+  }
 
   constructor(core) {
     super(core)
@@ -71,7 +80,14 @@ export default class ChromecastPlugin extends UICorePlugin {
 
   bindEvents() {
     this.listenTo(this.core.mediaControl, Events.MEDIACONTROL_RENDERED, this.render)
-    this.listenTo(this.core, Events.CORE_ACTIVE_CONTAINER_CHANGED, this.containerChanged)
+
+    if (Events.CORE_ACTIVE_CONTAINER_CHANGED) {
+      // Clappr 0.3.0 or greater
+      this.listenTo(this.core, Events.CORE_ACTIVE_CONTAINER_CHANGED, this.containerChanged)
+    } else {
+      this.listenTo(this.core.mediaControl, Events.MEDIACONTROL_CONTAINERCHANGED, this.containerChanged)
+    }
+
     if (this.container) {
       this.listenTo(this.container, Events.CONTAINER_TIMEUPDATE, this.containerTimeUpdate)
       this.listenTo(this.container, Events.CONTAINER_PLAY, this.containerPlay)
@@ -183,7 +199,7 @@ export default class ChromecastPlugin extends UICorePlugin {
   loadMediaSuccess(how, mediaSession) {
     Log.debug(this.name, 'new media session', mediaSession, '(', how , ')')
 
-    this.originalPlayback = this.core.activePlayback
+    this.originalPlayback = this.playback
 
     let options = assign({}, this.originalPlayback.options, {
       currentMedia: mediaSession,
@@ -200,7 +216,7 @@ export default class ChromecastPlugin extends UICorePlugin {
 
     this.originalPlayback.$el.remove()
 
-    let container = this.core.activeContainer
+    let container = this.container
     container.$el.append(this.playbackProxy.$el)
     container.stopListening()
     container.playback = this.playbackProxy
@@ -236,7 +252,7 @@ export default class ChromecastPlugin extends UICorePlugin {
     this.core.$el.removeClass('chromecast-active')
     this.core.load(this.src || this.core.options.sources)
 
-    let container = this.core.activeContainer
+    let container = this.container
 
     if (this.playbackProxy) {
       if (this.playbackProxy.isPlaying() || playerState === 'PAUSED') {
@@ -319,7 +335,7 @@ export default class ChromecastPlugin extends UICorePlugin {
   }
 
   click() {
-    this.currentTime = this.container.getCurrentTime();
+    this.currentTime = this.container.getCurrentTime()
     this.container.pause()
     chrome.cast.requestSession((session) => this.launchSuccess(session), (e) => this.launchError(e))
     if (!this.session) {
