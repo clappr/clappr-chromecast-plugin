@@ -60,7 +60,7 @@ export default class ChromecastPlugin extends UICorePlugin {
     this.bootMaxTryCount = this.options.bootMaxTryCount || 6  // Default is 6 attempts (3 seconds)
     this.bootTryCount = 0
 
-    if (Browser.isChrome) {
+    if (this.isBootable()) {
       this.appId = this.options.appId || DEFAULT_CLAPPR_APP_ID
       this.deviceState = DEVICE_STATE.IDLE
       this.embedScript()
@@ -77,6 +77,28 @@ export default class ChromecastPlugin extends UICorePlugin {
       this.listenTo(this.container, Events.CONTAINER_PLAY, this.containerPlay)
       this.listenTo(this.container, Events.CONTAINER_ENDED, this.sessionStopped)
     }
+  }
+
+  isBootable() {
+    // Browser must be Chrome
+    if (!Browser.isChrome) {
+      return false
+    }
+
+    // Chrome lesser than or equals to 71
+    // does not require secure page
+    if (Browser.version <= 71) {
+      return true
+    }
+
+    // Chrome greater than or equals to 72
+    // require secure page
+    return this.isSecure()
+  }
+
+  isSecure()
+  {
+    return window.location.protocol === 'https:'
   }
 
   enable() {
