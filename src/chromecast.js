@@ -96,8 +96,7 @@ export default class ChromecastPlugin extends UICorePlugin {
     return this.isSecure()
   }
 
-  isSecure()
-  {
+  isSecure() {
     return window.location.protocol === 'https:'
   }
 
