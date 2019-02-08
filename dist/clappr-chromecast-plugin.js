@@ -131,7 +131,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  _createClass(ChromecastPlugin, [{
 	    key: 'version',
 	    get: function get() {
-	      return ("0.1.0");
+	      return ("0.1.1");
 	    }
 	  }, {
 	    key: 'name',
@@ -147,7 +147,8 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'attributes',
 	    get: function get() {
 	      return {
-	        'class': 'chromecast-button'
+	        'class': 'chromecast-button',
+	        'type': 'button'
 	      };
 	    }
 	  }, {
@@ -165,7 +166,12 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'container',
 	    get: function get() {
-	      return this.core.activeContainer;
+	      return this.core.getCurrentContainer ? this.core.getCurrentContainer() : this.core.activeContainer; // Clappr 0.3.0 or greater
+	    }
+	  }, {
+	    key: 'playback',
+	    get: function get() {
+	      return this.core.getCurrentPlayback ? this.core.getCurrentPlayback() : this.core.activePlayback; // Clappr 0.3.0 or greater
 	    }
 	  }], [{
 	    key: 'Movie',
@@ -185,7 +191,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'version',
 	    get: function get() {
-	      return ("0.1.0");
+	      return ("0.1.1");
 	    }
 	  }]);
 
@@ -198,7 +204,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    this.bootMaxTryCount = this.options.bootMaxTryCount || 6; // Default is 6 attempts (3 seconds)
 	    this.bootTryCount = 0;
 
-	    if (_clappr.Browser.isChrome) {
+	    if (this.isBootable()) {
 	      this.appId = this.options.appId || DEFAULT_CLAPPR_APP_ID;
 	      this.deviceState = DEVICE_STATE.IDLE;
 	      this.embedScript();
@@ -211,12 +217,42 @@ return /******/ (function(modules) { // webpackBootstrap
 	    key: 'bindEvents',
 	    value: function bindEvents() {
 	      this.listenTo(this.core.mediaControl, _clappr.Events.MEDIACONTROL_RENDERED, this.render);
-	      this.listenTo(this.core, _clappr.Events.CORE_ACTIVE_CONTAINER_CHANGED, this.containerChanged);
+
+	      if (_clappr.Events.CORE_ACTIVE_CONTAINER_CHANGED) {
+	        // Clappr 0.3.0 or greater
+	        this.listenTo(this.core, _clappr.Events.CORE_ACTIVE_CONTAINER_CHANGED, this.containerChanged);
+	      } else {
+	        this.listenTo(this.core.mediaControl, _clappr.Events.MEDIACONTROL_CONTAINERCHANGED, this.containerChanged);
+	      }
+
 	      if (this.container) {
 	        this.listenTo(this.container, _clappr.Events.CONTAINER_TIMEUPDATE, this.containerTimeUpdate);
 	        this.listenTo(this.container, _clappr.Events.CONTAINER_PLAY, this.containerPlay);
 	        this.listenTo(this.container, _clappr.Events.CONTAINER_ENDED, this.sessionStopped);
 	      }
+	    }
+	  }, {
+	    key: 'isBootable',
+	    value: function isBootable() {
+	      // Browser must be Chrome
+	      if (!_clappr.Browser.isChrome) {
+	        return false;
+	      }
+
+	      // Chrome lesser than or equals to 71
+	      // does not require secure page
+	      if (_clappr.Browser.version <= 71) {
+	        return true;
+	      }
+
+	      // Chrome greater than or equals to 72
+	      // require secure page
+	      return this.isSecure();
+	    }
+	  }, {
+	    key: 'isSecure',
+	    value: function isSecure() {
+	      return window.location.protocol === 'https:';
 	    }
 	  }, {
 	    key: 'enable',
@@ -350,23 +386,24 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function loadMediaSuccess(how, mediaSession) {
 	      _clappr.Log.debug(this.name, 'new media session', mediaSession, '(', how, ')');
 
-	      this.originalPlayback = this.core.activePlayback;
+	      this.originalPlayback = this.playback;
 
 	      var options = (0, _lodashAssign2['default'])({}, this.originalPlayback.options, {
 	        currentMedia: mediaSession,
 	        mediaControl: this.core.mediaControl,
-	        poster: this.core.options.poster,
+	        poster: this.options.poster || this.core.options.poster,
 	        settings: this.originalPlayback.settings
 	      });
 	      this.src = this.originalPlayback.src;
 	      this.playbackProxy = new _chromecast_playback2['default'](options);
 	      this.playbackProxy.render();
+	      this.core.$el.addClass('chromecast-active');
 
 	      this.mediaSession = mediaSession;
 
 	      this.originalPlayback.$el.remove();
 
-	      var container = this.core.activeContainer;
+	      var container = this.container;
 	      container.$el.append(this.playbackProxy.$el);
 	      container.stopListening();
 	      container.playback = this.playbackProxy;
@@ -406,9 +443,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	        this.mediaSession = null;
 	      }
 
+	      this.core.$el.removeClass('chromecast-active');
 	      this.core.load(this.src || this.core.options.sources);
 
-	      var container = this.core.activeContainer;
+	      var container = this.container;
 
 	      if (this.playbackProxy) {
 	        if (this.playbackProxy.isPlaying() || playerState === 'PAUSED') {
@@ -431,7 +469,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var mediaInfo = this.createMediaInfo(src);
 	      var request = new chrome.cast.media.LoadRequest(mediaInfo);
 	      request.autoplay = true;
-	      request.currentTime = this.currentTime || 0;
+	      if (this.currentTime) {
+	        request.currentTime = this.currentTime;
+	      }
 	      this.session.loadMedia(request, function (mediaSession) {
 	        return _this5.loadMediaSuccess('loadMedia', mediaSession);
 	      }, function (e) {
@@ -474,6 +514,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	          return new chrome.cast.Image(url);
 	        });
 	      }
+	      if (!metadata.images && this.options.poster) {
+	        metadata.images = [new chrome.cast.Image(this.options.poster)];
+	      }
 	      if (!metadata.images && this.core.options.poster) {
 	        metadata.images = [new chrome.cast.Image(this.core.options.poster)];
 	      }
@@ -506,6 +549,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function click() {
 	      var _this6 = this;
 
+	      this.currentTime = this.container.getCurrentTime();
 	      this.container.pause();
 	      chrome.cast.requestSession(function (session) {
 	        return _this6.launchSuccess(session);
@@ -530,7 +574,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function containerChanged() {
 	      this.stopListening();
 	      this.bindEvents();
-	      this.currentTime = 0;
 	    }
 	  }, {
 	    key: 'containerTimeUpdate',
@@ -542,7 +585,6 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function containerPlay() {
 	      if (this.session && (!this.mediaSession || this.mediaSession.playerState === 'IDLE' || this.mediaSession.playerState === 'PAUSED')) {
 	        _clappr.Log.debug(this.name, 'load media');
-	        this.currentTime = this.currentTime || 0;
 	        this.loadMedia();
 	      }
 	    }
@@ -685,6 +727,9 @@ return /******/ (function(modules) { // webpackBootstrap
 	    value: function pause() {
 	      this.stopTimer();
 	      this.currentMedia.pause();
+	      if (this.getPlaybackType() === _clappr.Playback.LIVE) {
+	        this.trigger(_clappr.Events.PLAYBACK_DVR, true);
+	      }
 	    }
 	  }, {
 	    key: 'stop',
@@ -705,6 +750,10 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }, function () {
 	        return _clappr.Log.warn('seek failed');
 	      });
+	      if (this.getPlaybackType() === _clappr.Playback.LIVE) {
+	        // assume live if time within 30 seconds of end of live stream
+	        this.trigger(_clappr.Events.PLAYBACK_DVR, time < this.getDuration() - 30);
+	      }
 	    }
 	  }, {
 	    key: 'seekPercentage',
@@ -742,7 +791,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getPlaybackType',
 	    value: function getPlaybackType() {
-	      return this.currentMedia.streamType == 'LIVE' ? _clappr.Playback.LIVE : _clappr.Playback.VOD;
+	      return !!this.currentMedia.liveSeekableRange ? _clappr.Playback.LIVE : _clappr.Playback.VOD;
 	    }
 	  }, {
 	    key: 'onMediaStatusUpdate',
