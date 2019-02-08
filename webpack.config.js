@@ -67,4 +67,10 @@ module.exports = {
     library: 'ChromecastPlugin',
     libraryTarget: 'umd',
   },
+  devServer: {
+    contentBase: 'public/',
+    host: '0.0.0.0',
+    disableHostCheck: true,
+    inline: false
+  },
 };
