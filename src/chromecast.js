@@ -68,6 +68,7 @@ export default class ChromecastPlugin extends UICorePlugin {
     this.bootTryDelay = this.options.bootTryDelay || 500      // Default is 500 milliseconds between each attempt
     this.bootMaxTryCount = this.options.bootMaxTryCount || 6  // Default is 6 attempts (3 seconds)
     this.bootTryCount = 0
+    this.textTracks = [];
 
     if (this.isBootable()) {
       this.appId = this.options.appId || DEFAULT_CLAPPR_APP_ID
@@ -168,6 +169,30 @@ export default class ChromecastPlugin extends UICorePlugin {
     }
   }
 
+  enableCaptions(enabled) {
+    if (!this.session) return;
+    var enabledTextTrackIDs = [];
+    if (enabled && this.textTracks && this.textTracks.length > 0) {
+      enabledTextTrackIDs = [this.textTracks[0].id];
+    }
+    this.session.sendMessage(
+      'urn:x-cast:boxcast:active-text-tracks',
+      enabledTextTrackIDs
+    );
+    this.core.getCurrentContainer().trigger(
+      Events.CONTAINER_SUBTITLE_CHANGED,
+      {id: enabled ? this.textTracks[0].id : -1}
+    );
+  }
+
+  updateCCTrackID(trackID) {
+    if (trackID !== -1) {
+      this.enableCaptions(true);
+    } else {
+      this.enableCaptions(false);
+    }
+  }
+
   initializeCastApi() {
     let autoJoinPolicy = chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
     let sessionRequest = new chrome.cast.SessionRequest(this.appId)
@@ -188,6 +213,17 @@ export default class ChromecastPlugin extends UICorePlugin {
         this.sessionStopped()
         this.session = null
       }
+    }
+  }
+
+  onSessionTextTracks(tracks) {
+    this.textTracks = tracks.map(t => {return {id: t.trackId, name: t.name, track: t};});
+    if (this.textTracks.length > 0) {
+      if (this.playbackProxy) {
+        this.playbackProxy._closedCaptionsTracks = this.textTracks;
+      }
+      this.trigger(Events.PLAYBACK_SUBTITLE_AVAILABLE);
+      this.updateCCTrackID(this.core.getCurrentContainer().closedCaptionsTrackId);
     }
   }
 
@@ -226,7 +262,9 @@ export default class ChromecastPlugin extends UICorePlugin {
       currentMedia: mediaSession,
       mediaControl: this.core.mediaControl,
       poster: this.options.poster || this.core.options.poster,
-      settings: this.originalPlayback.settings
+      settings: this.originalPlayback.settings,
+      ccTracks: this.textTracks,
+      updateCCTrackID: (id) => this.updateCCTrackID(id)
     })
     this.src = this.originalPlayback.src
     this.playbackProxy = new ChromecastPlayback(options)
@@ -255,6 +293,10 @@ export default class ChromecastPlugin extends UICorePlugin {
     this.renderConnected()
 
     session.addUpdateListener(() => this.sessionUpdateListener())
+    session.addMessageListener(
+      'urn:x-cast:boxcast:text-tracks',
+      (_, tracksJSON) => this.onSessionTextTracks(JSON.parse(tracksJSON))
+    );
 
     this.containerPlay()
   }
