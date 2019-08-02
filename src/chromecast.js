@@ -17,6 +17,8 @@ const DEVICE_STATE = {
 
 const DEFAULT_CLAPPR_APP_ID = '9DFB77C0'
 
+const DEFAULT_MESSAGE_NAMESPACE = 'clappr-chromecast-plugin';
+
 const MIMETYPES = {
   'mp4': 'video/mp4',
   'ogg': 'video/ogg',
@@ -69,6 +71,7 @@ export default class ChromecastPlugin extends UICorePlugin {
     this.bootMaxTryCount = this.options.bootMaxTryCount || 6  // Default is 6 attempts (3 seconds)
     this.bootTryCount = 0
     this.textTracks = [];
+    this.messageNamespace = this.options.customNamespace || DEFAULT_MESSAGE_NAMESPACE;
 
     if (this.isBootable()) {
       this.appId = this.options.appId || DEFAULT_CLAPPR_APP_ID
@@ -176,7 +179,7 @@ export default class ChromecastPlugin extends UICorePlugin {
       enabledTextTrackIDs = [this.textTracks[0].id];
     }
     this.session.sendMessage(
-      'urn:x-cast:boxcast:active-text-tracks',
+      `urn:x-cast:${this.messageNamespace}:active-text-tracks`,
       enabledTextTrackIDs
     );
     this.core.getCurrentContainer().trigger(
@@ -294,7 +297,7 @@ export default class ChromecastPlugin extends UICorePlugin {
 
     session.addUpdateListener(() => this.sessionUpdateListener())
     session.addMessageListener(
-      'urn:x-cast:boxcast:text-tracks',
+      `urn:x-cast:${this.messageNamespace}:text-tracks`,
       (_, tracksJSON) => this.onSessionTextTracks(JSON.parse(tracksJSON))
     );
 
