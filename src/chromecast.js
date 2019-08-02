@@ -172,27 +172,28 @@ export default class ChromecastPlugin extends UICorePlugin {
     }
   }
 
-  enableCaptions(enabled) {
-    if (!this.session) return;
-    var enabledTextTrackIDs = [];
-    if (enabled && this.textTracks && this.textTracks.length > 0) {
-      enabledTextTrackIDs = [this.textTracks[0].id];
-    }
-    this.session.sendMessage(
-      `urn:x-cast:${this.messageNamespace}:active-text-tracks`,
-      enabledTextTrackIDs
-    );
-    this.core.getCurrentContainer().trigger(
-      Events.CONTAINER_SUBTITLE_CHANGED,
-      {id: enabled ? this.textTracks[0].id : -1}
-    );
-  }
-
   updateCCTrackID(trackID) {
     if (trackID !== -1) {
-      this.enableCaptions(true);
-    } else {
-      this.enableCaptions(false);
+      let found = false;
+      this.textTracks.forEach(t => found = found || t.id === trackID);
+      if (!found) {
+        console.warn(`Failed to enable text track with ID ${trackID}, as it does not exist.`);
+        return;
+      }
+    }
+    var enabledTextTrackIDs = [];
+    if (trackID !== -1) {
+      enabledTextTrackIDs = [trackID];
+    }
+    if (this.session) {
+      this.session.sendMessage(
+        `urn:x-cast:${this.messageNamespace}:active-text-tracks`,
+        enabledTextTrackIDs
+      );
+    }
+    let container = this.core.getCurrentContainer();
+    if (container) {
+      container.trigger(Events.CONTAINER_SUBTITLE_CHANGED, {id: trackID});
     }
   }
 
