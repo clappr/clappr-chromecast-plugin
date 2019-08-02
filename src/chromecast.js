@@ -17,6 +17,8 @@ const DEVICE_STATE = {
 
 const DEFAULT_CLAPPR_APP_ID = '9DFB77C0'
 
+const DEFAULT_MESSAGE_NAMESPACE = 'clappr-chromecast-plugin';
+
 const MIMETYPES = {
   'mp4': 'video/mp4',
   'ogg': 'video/ogg',
@@ -68,6 +70,8 @@ export default class ChromecastPlugin extends UICorePlugin {
     this.bootTryDelay = this.options.bootTryDelay || 500      // Default is 500 milliseconds between each attempt
     this.bootMaxTryCount = this.options.bootMaxTryCount || 6  // Default is 6 attempts (3 seconds)
     this.bootTryCount = 0
+    this.textTracks = [];
+    this.messageNamespace = this.options.customNamespace || DEFAULT_MESSAGE_NAMESPACE;
 
     if (this.isBootable()) {
       this.appId = this.options.appId || DEFAULT_CLAPPR_APP_ID
@@ -172,6 +176,29 @@ export default class ChromecastPlugin extends UICorePlugin {
     }
   }
 
+  updateCCTrackID(trackID) {
+    if (trackID !== -1) {
+      if (this.textTracks.filter(t => t.id === trackID).length === 0) {
+        console.warn(`Failed to enable text track with ID ${trackID}, as it does not exist.`);
+        return;
+      }
+    }
+    var enabledTextTrackIDs = [];
+    if (trackID !== -1) {
+      enabledTextTrackIDs = [trackID];
+    }
+    if (this.session) {
+      this.session.sendMessage(
+        `urn:x-cast:${this.messageNamespace}:active-text-tracks`,
+        enabledTextTrackIDs
+      );
+    }
+    let container = this.core.getCurrentContainer();
+    if (container) {
+      container.trigger(Events.CONTAINER_SUBTITLE_CHANGED, {id: trackID});
+    }
+  }
+
   initializeCastApi() {
     let autoJoinPolicy = chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED
     let sessionRequest = new chrome.cast.SessionRequest(this.appId)
@@ -192,6 +219,17 @@ export default class ChromecastPlugin extends UICorePlugin {
         this.sessionStopped()
         this.session = null
       }
+    }
+  }
+
+  onSessionTextTracks(tracks) {
+    this.textTracks = tracks.map(t => {return {id: t.trackId, name: t.name, track: t};});
+    if (this.textTracks.length > 0) {
+      if (this.playbackProxy) {
+        this.playbackProxy._closedCaptionsTracks = this.textTracks;
+      }
+      this.trigger(Events.PLAYBACK_SUBTITLE_AVAILABLE);
+      this.updateCCTrackID(this.core.getCurrentContainer().closedCaptionsTrackId);
     }
   }
 
@@ -230,7 +268,9 @@ export default class ChromecastPlugin extends UICorePlugin {
       currentMedia: mediaSession,
       mediaControl: this.core.mediaControl,
       poster: this.options.poster || this.core.options.poster,
-      settings: this.originalPlayback.settings
+      settings: this.originalPlayback.settings,
+      ccTracks: this.textTracks,
+      updateCCTrackID: (id) => this.updateCCTrackID(id)
     })
     this.src = this.originalPlayback.src
     this.playbackProxy = new ChromecastPlayback(options)
@@ -259,6 +299,10 @@ export default class ChromecastPlugin extends UICorePlugin {
     this.renderConnected()
 
     session.addUpdateListener(() => this.sessionUpdateListener())
+    session.addMessageListener(
+      `urn:x-cast:${this.messageNamespace}:text-tracks`,
+      (_, tracksJSON) => this.onSessionTextTracks(JSON.parse(tracksJSON))
+    );
 
     this.containerPlay()
   }
