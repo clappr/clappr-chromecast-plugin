@@ -174,9 +174,7 @@ export default class ChromecastPlugin extends UICorePlugin {
 
   updateCCTrackID(trackID) {
     if (trackID !== -1) {
-      let found = false;
-      this.textTracks.forEach(t => found = found || t.id === trackID);
-      if (!found) {
+      if (this.textTracks.filter(t => t.id === trackID).length === 0) {
         console.warn(`Failed to enable text track with ID ${trackID}, as it does not exist.`);
         return;
       }
