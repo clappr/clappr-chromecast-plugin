@@ -108,8 +108,12 @@ export default class ChromecastPlugin extends UICorePlugin {
     }
 
     // Chrome greater than or equals to 72
-    // require secure page
-    return this.isSecure()
+    // require secure page or localhost
+    return this.isSecure() || this.isLocalhost()
+  }
+
+  isLocalhost() {
+    return window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
   }
 
   isSecure() {
