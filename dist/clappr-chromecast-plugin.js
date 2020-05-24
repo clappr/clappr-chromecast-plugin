@@ -131,7 +131,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  _createClass(ChromecastPlugin, [{
 	    key: 'version',
 	    get: function get() {
-	      return ("0.1.1");
+	      return ("0.1.2");
 	    }
 	  }, {
 	    key: 'name',
@@ -191,7 +191,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'version',
 	    get: function get() {
-	      return ("0.1.1");
+	      return ("0.1.2");
 	    }
 	  }]);
 
@@ -246,8 +246,13 @@ return /******/ (function(modules) { // webpackBootstrap
 	      }
 
 	      // Chrome greater than or equals to 72
-	      // require secure page
-	      return this.isSecure();
+	      // require secure page or localhost
+	      return this.isSecure() || this.isLocalhost();
+	    }
+	  }, {
+	    key: 'isLocalhost',
+	    value: function isLocalhost() {
+	      return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
 	    }
 	  }, {
 	    key: 'isSecure',
@@ -791,7 +796,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	  }, {
 	    key: 'getPlaybackType',
 	    value: function getPlaybackType() {
-	      return !!this.currentMedia.liveSeekableRange ? _clappr.Playback.LIVE : _clappr.Playback.VOD;
+	      return !!this.currentMedia.liveSeekableRange ? _clappr.Playback.LIVE : _clappr.Playback.VOD; // eslint-disable-line no-extra-boolean-cast
 	    }
 	  }, {
 	    key: 'onMediaStatusUpdate',
