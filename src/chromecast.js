@@ -113,7 +113,7 @@ export default class ChromecastPlugin extends UICorePlugin {
   }
 
   isLocalhost() {
-    return window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1"
+    return window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
   }
 
   isSecure() {

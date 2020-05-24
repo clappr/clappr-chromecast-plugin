@@ -88,7 +88,7 @@ export default class ChromecastPlayback extends Playback {
   }
 
   getPlaybackType() {
-    return !!this.currentMedia.liveSeekableRange ? Playback.LIVE : Playback.VOD
+    return !!this.currentMedia.liveSeekableRange ? Playback.LIVE : Playback.VOD // eslint-disable-line no-extra-boolean-cast
   }
 
   onMediaStatusUpdate() {
