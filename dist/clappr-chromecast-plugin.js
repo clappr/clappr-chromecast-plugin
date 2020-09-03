@@ -469,7 +469,7 @@ return /******/ (function(modules) { // webpackBootstrap
 	      var _this5 = this;
 
 	      this.container.pause();
-	      var src = this.container.options.src;
+	      var src = this.options.source || this.container.options.src;
 	      _clappr.Log.debug(this.name, 'loading... ' + src);
 	      var mediaInfo = this.createMediaInfo(src);
 	      var request = new chrome.cast.media.LoadRequest(mediaInfo);
