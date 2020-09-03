@@ -292,7 +292,7 @@ export default class ChromecastPlugin extends UICorePlugin {
 
   loadMedia() {
     this.container.pause()
-    let src = this.container.options.src
+    let src = this.options.source || this.container.options.src
     Log.debug(this.name, 'loading... ' + src)
     let mediaInfo = this.createMediaInfo(src)
     let request = new chrome.cast.media.LoadRequest(mediaInfo)

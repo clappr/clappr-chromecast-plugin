@@ -22,7 +22,8 @@ Please notice it's still not production ready, as it lacks a way to select track
         parentId: '#player',
         chromecast: {
           appId: '9DFB77C0',
-          contentType: 'video/mp4',
+          source: '//clappr.io/different_source.mpd',
+          contentType: 'application/dash+xml',
           media: {
             type: ChromecastPlugin.Movie,
             title: 'Awesome Hot Air Balloon Slackline',
@@ -45,6 +46,7 @@ There's also a [demo page](https://clappr.github.io/clappr-chromecast-plugin).
 The plugin parameters are passed through the embed parameters object under the `chromecast` key:
 
 - appId: indicates what Chromecast application id should be used (defaults to Clappr app id: `9DFB77C0`).
+- source: overrides the default source used by the plugin when loading the video. If not present, the plugin will use the current source playing.
 - contentType: overrides the default content type used by the plugin when loading the video. If not present, the plugin infers its value from the source URL.
 - media: an object that represents metadata to be presented on the Chromecast application. The supported metadata values are:
   - type: the type of the media. Currently the supported values are `ChromecastPlugin.Movie` (for movies), `ChromecastPlugin.TvSeries` (for TV episodes) and `ChromecastPlugin.None` (for generic metadata - can also be absent or set to `null`/`undefined`)
