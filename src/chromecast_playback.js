@@ -1,4 +1,4 @@
-import {Events, Log, Playback, template} from 'clappr'
+import {Events, Log, Playback, template} from '@clappr/player'
 import chromecastHTML from './public/chromecast.html'
 
 const TICK_INTERVAL = 100
@@ -28,7 +28,7 @@ export default class ChromecastPlayback extends Playback {
   }
 
   get closedCaptionsTracks() {
-    return this._closedCaptionsTracks;
+    return this._closedCaptionsTracks
   }
 
   get closedCaptionsTrackId() {
@@ -36,8 +36,8 @@ export default class ChromecastPlayback extends Playback {
   }
 
   set closedCaptionsTrackId(trackID) {
-    this._ccTrackId = trackID;
-    this._updateCCTrackID(trackID);
+    this._ccTrackId = trackID
+    this._updateCCTrackID(trackID)
   }
 
   render() {
@@ -104,7 +104,7 @@ export default class ChromecastPlayback extends Playback {
   }
 
   getPlaybackType() {
-    return !!this.currentMedia.liveSeekableRange ? Playback.LIVE : Playback.VOD
+    return this.currentMedia.liveSeekableRange ? Playback.LIVE : Playback.VOD
   }
 
   onMediaStatusUpdate() {

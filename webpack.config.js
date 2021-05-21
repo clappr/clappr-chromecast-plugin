@@ -1,76 +1,89 @@
-var path = require('path');
-var webpack = require('webpack');
-var Clean = require('clean-webpack-plugin');
+// Webpack 4 configuration
+const path = require('path')
+const TerserPlugin = require('terser-webpack-plugin')
 
-var plugins = [
-  new webpack.DefinePlugin({
-    VERSION: JSON.stringify(require('./package.json').version)
-  })
-];
-if (process.env.npm_lifecycle_event === 'release') {
-  plugins.push(new webpack.optimize.UglifyJsPlugin({
-    compress: {warnings: false},
-    output: {comments: false}
-  }));
+var name = 'clappr-chromecast-plugin'
+var outputFile, plugins = [], optimization = {}
+
+if (process.env.npm_lifecycle_event === 'dist') {
+  outputFile = name + '.min.js'
+  optimization.minimizer = [
+    new TerserPlugin({
+      cache: true, // TODO: set to false if Webpack upgraded to 5.x ?
+    }),
+  ]
 } else {
-  plugins.push(new Clean(['dist']));
+  outputFile = name + '.js'
+  optimization.minimize = false
 }
 
 module.exports = {
   entry: path.resolve(__dirname, 'src/chromecast.js'),
-  plugins: plugins,
+  devtool: 'source-map',
+  optimization: optimization,
+  output: {
+    path: path.resolve(__dirname, 'lib'),
+    filename: outputFile,
+    library: 'ChromecastPlugin',
+    libraryExport: 'default',
+    libraryTarget: 'umd',
+  },
   module: {
-    loaders: [
+    rules: [
       {
         test: /\.js$/,
-        loader: 'babel',
-        exclude: /node_modules/
+        use: {
+          loader: 'babel-loader'
+        },
+        include: [
+          path.resolve(__dirname, 'src')
+        ],
       },
       {
         test: /\.scss$/,
-        loaders: ['css', 'sass?includePaths[]='
-            + path.resolve(__dirname, './node_modules/compass-mixins/lib')
-            + '&includePaths[]='
-            + path.resolve(__dirname, './node_modules/clappr/src/base/scss')
-            + '&includePaths[]='
-            + path.resolve(__dirname, './src/base/scss')
+        use: [
+          {
+            loader: 'css-loader',
+          },
+          {
+            loader: 'sass-loader',
+          },
         ],
-        include: path.resolve(__dirname, 'src'),
       },
-       {
-           test: /\.(png|woff|eot|ttf|swf)/, loader: 'url-loader?limit=1'
-       },
-       {
-           test: /\.svg/, loader: 'svg-inline'
-       },
-       {
-           test: /\.html/, loader: 'html?minimize=true'
-       }
+      {
+        test: /\.html$/,
+        use: {
+          loader: 'html-loader',
+          options: {
+            minimize: false
+          }
+        },
+      },
+      {
+        test: /\.svg$/,
+        use: {
+          loader: 'svg-inline-loader',
+        },
+      },
     ],
   },
-  resolve: {
-    root: path.resolve(__dirname, 'src'),
-    extensions: ['', '.js'],
-  },
+  plugins: plugins,
   externals: {
-    clappr: {
-      amd: 'clappr',
-      commonjs: 'clappr',
-      commonjs2: 'clappr',
+    '@clappr/player': {
+      amd: '@clappr/player',
+      commonjs: '@clappr/player',
+      commonjs2: '@clappr/player',
       root: 'Clappr'
     }
   },
-  output: {
-    path: path.resolve(__dirname, 'dist'),
-    publicPath: '/',
-    filename: 'clappr-chromecast-plugin.js',
-    library: 'ChromecastPlugin',
-    libraryTarget: 'umd',
-  },
   devServer: {
-    contentBase: 'public/',
+    contentBase: [
+      path.resolve(__dirname, 'public'),
+    ],
+    // publicPath: '/js/',
+    disableHostCheck: true, // https://github.com/webpack/webpack-dev-server/issues/882
+    compress: true,
     host: '0.0.0.0',
-    disableHostCheck: true,
-    inline: false
-  },
-};
+    port: 8080
+  }
+}
